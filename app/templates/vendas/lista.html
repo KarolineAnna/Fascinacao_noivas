@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, limpar_filtros with context %}
+{% block titulo %}Vendas{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Vendas", "Vendas") %}
+    <a class="btn btn-primario" href="{{ url_for('vendas.nova') }}">+ Nova venda</a>
+  {% endcall %}
+
+  <div class="abas-periodo alternador">
+    <a href="{{ url_for('vendas.lista', modo='dia') }}" class="{{ 'ativo' if modo == 'dia' }}">Dia</a>
+    <a href="{{ url_for('vendas.lista', modo='mes') }}" class="{{ 'ativo' if modo == 'mes' }}">Mês</a>
+    <a href="{{ url_for('vendas.lista', modo='periodo') }}" class="{{ 'ativo' if modo == 'periodo' }}">Período</a>
+  </div>
+
+  <form class="filtros" method="get">
+    <input type="hidden" name="modo" value="{{ modo }}">
+    {% if modo == 'dia' %}
+      <div class="campo"><label for="dia">Dia</label><input type="date" id="dia" name="dia" value="{{ filtros.dia }}"></div>
+    {% elif modo == 'mes' %}
+      <div class="campo"><label for="mes">Mês</label><input type="month" id="mes" name="mes" value="{{ filtros.mes }}"></div>
+    {% else %}
+      <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="{{ filtros.de }}"></div>
+      <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="{{ filtros.ate }}"></div>
+    {% endif %}
+    <div class="campo">
+      <label for="categoria">Marca / categoria</label>
+      <select id="categoria" name="categoria">
+        <option value="">Todas</option>
+        {% for c in categorias %}<option value="{{ c.id }}" {{ 'selected' if categoria == c.id|string }}>{{ c.nome }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="forma">Forma de pagamento</label>
+      <select id="forma" name="forma">
+        <option value="">Todas</option>
+        {% for f in formas %}<option {{ 'selected' if f == forma }}>{{ f }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn" type="submit">Filtrar</button>
+    {{ limpar_filtros('vendas.lista') }}
+  </form>
+
+  <div class="indicadores">
+    <div class="indicador ouro">
+      <div class="rotulo">Total vendido · {{ descricao }}</div>
+      <div class="valor num">{{ total | brl }}</div>
+      <div class="detalhe">{{ vendas | length }} venda{{ 's' if vendas | length != 1 }}</div>
+    </div>
+  </div>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if vendas %}
+      <table class="tabela">
+        <thead><tr><th>Venda</th><th>Data</th><th>Produtos</th><th>Cliente</th><th>Forma</th><th class="direita">Total</th></tr></thead>
+        <tbody>
+          {% for v in vendas %}
+            <tr>
+              <td><a class="principal" href="{{ url_for('vendas.ver', venda_id=v.id) }}">nº {{ v.id }}</a></td>
+              <td class="num">{{ v.data | data }}</td>
+              <td>{{ resumo[v.id] }}</td>
+              <td>{{ v.cliente or '—' }}</td>
+              <td>{{ v.forma }}</td>
+              <td class="direita num">{{ v.total | brl }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="5">Total vendido</td><td class="direita num">{{ total | brl }}</td></tr></tfoot>
+      </table>
+    {% else %}
+      <div class="vazio"><h3>Nenhuma venda no período</h3><p>Registre uma venda em “Nova venda”.</p></div>
+    {% endif %}
+  </div>
+{% endblock %}

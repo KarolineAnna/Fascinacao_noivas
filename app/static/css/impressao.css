@@ -1,0 +1,110 @@
+/* Ficha para impressão em A4 */
+
+@page { size: A4; margin: 14mm 16mm; }
+
+.pagina-impressao { background: #EFEAE3; }
+
+.barra-impressao {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+}
+
+.folha {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 40px;
+  padding: 16mm 18mm;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(46, 42, 39, .12);
+  display: flex;
+  flex-direction: column;
+  font-size: 10.5pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.folha-topo { text-align: center; padding-bottom: 6mm; border-bottom: 1px solid var(--dourado); }
+.folha-marca { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 30pt; line-height: 1; }
+.folha-sub { margin-top: 6px; font-size: 7pt; letter-spacing: .4em; text-transform: uppercase; color: var(--dourado); }
+.ornamento.centralizado { margin: 10px auto 0; }
+
+.folha-titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 7mm 0 4mm;
+}
+.folha-titulo .numero { font-family: var(--serif); font-size: 22pt; font-weight: 500; line-height: 1; }
+
+.folha .rotulo {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 6.8pt;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--taupe);
+}
+
+.folha-secao { margin-top: 6mm; }
+.folha-secao h2 {
+  font-size: 14pt;
+  padding-bottom: 2mm;
+  margin-bottom: 3mm;
+  border-bottom: 1px solid var(--linha);
+  color: var(--dourado-escuro);
+}
+
+.folha-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; }
+.folha-dados > div { font-weight: 400; }
+
+.folha-tabela { width: 100%; border-collapse: collapse; }
+.folha-tabela th {
+  text-align: left;
+  font-size: 6.8pt;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  font-weight: 400;
+  padding: 2mm 2mm 2mm 0;
+  border-bottom: 1px solid var(--linha);
+}
+.folha-tabela td { padding: 2.2mm 2mm 2.2mm 0; border-bottom: 1px solid var(--linha); }
+.folha-tabela td:first-child { color: var(--dourado-escuro); }
+
+.folha-colunas { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10mm; }
+
+.folha-linha { display: flex; justify-content: space-between; gap: 6mm; padding: 1.8mm 0; border-bottom: 1px dashed var(--linha); }
+.folha-linha:last-child { border-bottom: none; }
+.folha-linha span { color: var(--taupe); }
+.folha-linha small { font-size: 8pt; }
+.folha-linha strong { font-weight: 500; }
+.folha-linha.total strong { font-family: var(--serif); font-size: 15pt; }
+
+.folha-obs { margin: 0; white-space: pre-line; }
+.folha-termo p { margin: 0 0 1.6mm; font-size: 8.4pt; line-height: 1.45; text-align: justify; color: #3d3935; }
+
+.folha-assinatura {
+  margin-top: auto;
+  padding-top: 14mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12mm;
+}
+.assinatura { flex: 1; text-align: center; color: var(--taupe); font-size: 9pt; }
+.linha-assinatura { border-bottom: 1px solid var(--grafite); margin-bottom: 2mm; height: 10mm; }
+.data-assinatura { white-space: nowrap; font-size: 10pt; padding-bottom: 6mm; }
+
+@media print {
+  .barra-impressao { display: none; }
+  .pagina-impressao { background: #fff; }
+  .folha {
+    width: auto;
+    min-height: calc(297mm - 28mm);
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}

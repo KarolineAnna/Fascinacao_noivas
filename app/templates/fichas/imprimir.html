@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha nº {{ ficha.id }} · {{ NOME_LOJA }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/icone.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/impressao.css') }}">
+</head>
+<body class="pagina-impressao">
+  <div class="barra-impressao">
+    <button class="btn btn-primario" type="button" onclick="window.print()">Imprimir</button>
+    <a class="voltar" href="{{ url_for('fichas.ver', ficha_id=ficha.id) }}">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Voltar
+    </a>
+  </div>
+
+  <article class="folha">
+    <header class="folha-topo">
+      <div class="folha-marca">{{ NOME_LOJA }}</div>
+      <div class="folha-sub">Aluguel de trajes para noivas e padrinhos</div>
+      <div class="ornamento centralizado"><span></span></div>
+    </header>
+
+    <div class="folha-titulo">
+      <div>
+        <div class="rotulo">Ficha de aluguel</div>
+        <div class="numero">nº {{ ficha.id }}</div>
+      </div>
+      <div class="direita">
+        <div class="rotulo">Emitida em</div>
+        <div>{{ hoje | data }}</div>
+      </div>
+    </div>
+
+    <section class="folha-secao">
+      <h2>Cliente</h2>
+      <div class="folha-dados">
+        <div class="largo"><span class="rotulo">Nome</span>{{ ficha.cliente_nome }}</div>
+        <div><span class="rotulo">CPF</span>{{ ficha.cliente_cpf | cpf }}</div>
+        <div><span class="rotulo">Telefone</span>{{ ficha.cliente_telefone or '—' }}</div>
+        <div class="largo"><span class="rotulo">Endereço</span>{{ ficha.cliente_endereco or '—' }}</div>
+      </div>
+    </section>
+
+    <section class="folha-secao">
+      <h2>Peças alugadas</h2>
+      <table class="folha-tabela">
+        <thead><tr><th>Código</th><th>Peça</th><th>Tamanho</th><th>Cor</th><th class="direita">Valor</th></tr></thead>
+        <tbody>
+          {% for i in itens %}
+            <tr>
+              <td>{{ i.codigo }}</td>
+              <td>{{ i.nome }}</td>
+              <td>{{ i.tamanho or '—' }}</td>
+              <td>{{ i.cor or '—' }}</td>
+              <td class="direita num">{{ i.valor_cobrado | brl }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <div class="folha-colunas">
+      <section class="folha-secao">
+        <h2>Datas</h2>
+        <div class="folha-linha"><span>Saída</span><strong>{{ ficha.data_saida | data }}</strong></div>
+        <div class="folha-linha"><span>Devolução</span><strong>{{ ficha.data_devolucao | data }}</strong></div>
+      </section>
+
+      <section class="folha-secao">
+        <h2>Pagamento</h2>
+        <div class="folha-linha"><span>Valor do aluguel</span><strong class="num">{{ ficha.total | brl }}</strong></div>
+        <div class="folha-linha">
+          <span>Entrada{% if ficha.entrada_paga %} <small>(paga em {{ ficha.data_entrada | data }}{% if ficha.forma_entrada %} · {{ ficha.forma_entrada }}{% endif %})</small>{% endif %}</span>
+          <strong class="num">{{ ficha.entrada_efetiva | brl }}</strong>
+        </div>
+        <div class="folha-linha total">
+          <span>Restante{% if ficha.restante_pago %} <small>(pago em {{ ficha.data_restante | data }}{% if ficha.forma_restante %} · {{ ficha.forma_restante }}{% endif %})</small>{% endif %}</span>
+          <strong class="num">{{ ficha.restante | brl }}</strong>
+        </div>
+        <div class="folha-linha"><span>Situação do pagamento</span><strong>{{ STATUS_FIN[ficha.status_financeiro] }}</strong></div>
+        <div class="folha-linha"><span>Caução{% if ficha.caucao_valor and ficha.caucao_forma %} <small>({{ ficha.caucao_forma }})</small>{% endif %}</span>
+          <strong class="num">{{ (ficha.caucao_valor | brl) if ficha.caucao_valor else 'sem caução' }}</strong></div>
+        {% if ficha.multa_valor %}
+          <div class="folha-linha"><span>Multa por atraso{% if ficha.multa_paga %} <small>(paga em {{ ficha.multa_data | data }})</small>{% endif %}</span>
+            <strong class="num">{{ ficha.multa_valor | brl }}</strong></div>
+        {% endif %}
+      </section>
+    </div>
+
+    {% if ficha.observacoes %}
+      <section class="folha-secao">
+        <h2>Observações</h2>
+        <p class="folha-obs">{{ ficha.observacoes }}</p>
+      </section>
+    {% endif %}
+
+    <section class="folha-secao folha-termo">
+      <h2>Termo de responsabilidade</h2>
+      {% for paragrafo in termo_contrato(ficha) %}<p>{{ paragrafo }}</p>{% endfor %}
+    </section>
+
+    <footer class="folha-assinatura">
+      <div class="assinatura">
+        <div class="linha-assinatura"></div>
+        <div>Assinatura do cliente</div>
+      </div>
+      <div class="data-assinatura">Data: ____/____/________</div>
+    </footer>
+  </article>
+
+  <script>
+    // Abre a janela de impressão automaticamente assim que as fontes carregarem.
+    window.addEventListener("load", function () {
+      (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { window.print(); });
+    });
+  </script>
+</body>
+</html>

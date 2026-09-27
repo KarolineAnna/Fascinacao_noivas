@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_fin, selo_sit, attrs_devolucao with context %}
+{% block titulo %}{{ cfg.titulo }}{% endblock %}
+{% set rota = 'agenda.' ~ modo %}
+{% block conteudo %}
+  {% call cabecalho(cfg.titulo, "Agenda") %}
+    <div class="alternador">
+      <a href="{{ url_for('agenda.saidas', data=dia.isoformat()) }}" class="{{ 'ativo' if modo == 'saidas' }}">Saídas</a>
+      <a href="{{ url_for('agenda.devolucoes', data=dia.isoformat()) }}" class="{{ 'ativo' if modo == 'devolucoes' }}">Devoluções</a>
+    </div>
+  {% endcall %}
+
+  <div class="navegador-data">
+    <div class="dia">
+      <a class="btn btn-icone" href="{{ url_for(rota, data=anterior.isoformat()) }}" title="Dia anterior">‹</a>
+      <div>
+        <div class="extenso">{{ dia_extenso }}</div>
+        <div class="suave pequeno">
+          {% if dia == hoje %}Hoje · {% endif %}{{ total_pecas }} peça{{ 's' if total_pecas != 1 }} em {{ fichas | length }} ficha{{ 's' if fichas | length != 1 }}
+        </div>
+      </div>
+      <a class="btn btn-icone" href="{{ url_for(rota, data=seguinte.isoformat()) }}" title="Dia seguinte">›</a>
+    </div>
+    <form method="get">
+      <input type="date" name="data" value="{{ dia.isoformat() }}" onchange="this.form.submit()" aria-label="Escolher data">
+      {% if dia != hoje %}<a class="btn btn-texto" href="{{ url_for(rota) }}">Hoje</a>{% endif %}
+    </form>
+  </div>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if fichas %}
+      <table class="tabela">
+        <thead>
+          <tr><th>Peças</th><th>Cliente</th><th>Telefone</th>
+              <th>{{ 'Devolução' if modo == 'saidas' else 'Saída' }}</th>
+              <th>Pagamento</th><th>Situação</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for f in fichas %}
+            <tr>
+              <td class="col-pecas">
+                <ul class="lista-pecas">
+                  {% for p in pecas[f.id] %}
+                    <li><span class="codigo">{{ p.codigo }}</span><span class="principal">{{ p.nome }}</span>
+                      {% if p.tamanho or p.cor %}<span class="det">{{ [p.tamanho and 'Tam. ' ~ p.tamanho, p.cor] | select | join(' · ') }}</span>{% endif %}</li>
+                  {% endfor %}
+                </ul>
+              </td>
+              <td>
+                <a class="principal" href="{{ url_for('fichas.ver', ficha_id=f.id) }}">{{ f.cliente_nome }}</a>
+                <div class="suave pequeno">Ficha nº {{ f.id }}</div>
+              </td>
+              <td class="num">{{ f.cliente_telefone or '—' }}</td>
+              <td class="num">{{ (f.data_devolucao if modo == 'saidas' else f.data_saida) | data }}</td>
+              <td>
+                {{ selo_fin(f.status_financeiro) }}
+                {% if f.status_financeiro != 'quitada' %}<div class="suave pequeno num" style="margin-top: 4px">Restante {{ f.restante | brl }}</div>{% endif %}
+              </td>
+              <td>{{ selo_sit(f.situacao) }}</td>
+              <td>
+                {% set destino, rotulo = cfg.acao %}
+                {% if f.situacao == cfg.de %}
+                  <span data-ficha-url="{{ url_for('fichas.controle', ficha_id=f.id) }}" data-voltar="{{ request.full_path }}"
+                        {{ attrs_devolucao(f) }} data-restante="{{ f.restante | brl }}" data-restante-pago="{{ '1' if f.status_financeiro == 'quitada' else '0' }}">
+                    <button class="btn btn-sm" type="button" data-controle="{{ destino }}" data-ligar="1">{{ rotulo }}</button>
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Dia tranquilo</h3>
+        <p>{{ cfg.vazio }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

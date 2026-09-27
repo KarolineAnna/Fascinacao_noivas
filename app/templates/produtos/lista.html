@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_peca, limpar_filtros with context %}
+{% block titulo %}Produtos{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Produtos", "Acervo de peças") %}
+    <a class="btn btn-primario" href="{{ url_for('produtos.novo') }}">+ Nova peça</a>
+  {% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo campo-busca">
+      <label for="q">Buscar</label>
+      <input type="search" id="q" name="q" value="{{ q }}" placeholder="Nome, código ou cor">
+    </div>
+    <div class="campo">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for t in tipos %}<option {{ 'selected' if t == tipo }}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="situacao">Situação</label>
+      <select id="situacao" name="situacao">
+        <option value="">Todas</option>
+        {% for k, v in SITUACOES_PECA.items() %}<option value="{{ k }}" {{ 'selected' if k == situacao }}>{{ v }}</option>{% endfor %}
+      </select>
+    </div>
+    <label class="check"><input type="checkbox" name="inativos" value="1" {{ 'checked' if inativos }}> Mostrar arquivadas</label>
+    <button class="btn" type="submit">Filtrar</button>
+    {{ limpar_filtros('produtos.lista') }}
+  </form>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if produtos %}
+      <table class="tabela">
+        <thead>
+          <tr><th>Código</th><th>Peça</th><th>Tipo</th><th>Tamanho</th><th>Cor</th><th>Situação</th><th class="direita">Aluguel</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for p in produtos %}
+            <tr class="{{ 'inativo' if not p.ativo }}">
+              <td><span class="codigo">{{ p.codigo }}</span></td>
+              <td class="principal">{{ p.nome }} {% if not p.ativo %}<span class="selo selo-inativo">Arquivada</span>{% endif %}</td>
+              <td>{{ p.tipo or '—' }}</td>
+              <td>{{ p.tamanho or '—' }}</td>
+              <td>{{ p.cor or '—' }}</td>
+              <td>
+                {% set s = situacoes[p.id] %}
+                {{ selo_peca(s.situacao) }}
+                {% if s.situacao == 'alugada' %}
+                  <div class="suave pequeno"><a href="{{ url_for('fichas.ver', ficha_id=s.ficha.ficha_id) }}">nº {{ s.ficha.ficha_id }}</a> · {{ s.ficha.cliente_nome }}
+                    {% if s.ficha.atrasada %}<span class="selo selo-atraso">atrasada</span>{% endif %}</div>
+                {% elif s.situacao == 'lavagem' %}
+                  <div class="suave pequeno">desde {{ s.lavagem_desde | data }}</div>
+                {% endif %}
+              </td>
+              <td class="direita num">{{ p.valor_aluguel | brl }}</td>
+              <td>
+                <div class="acoes">
+                  <a class="btn btn-sm btn-texto" href="{{ url_for('produtos.editar', produto_id=p.id) }}">Editar</a>
+                  {% if p.ativo %}
+                    <form class="inline" method="post" action="{{ url_for('produtos.excluir', produto_id=p.id) }}"
+                          data-confirmar="Você gostaria de excluir a peça “{{ p.nome }}”?"
+                          data-nota="Se ela já aparece em alguma ficha, será apenas arquivada para manter o histórico.">
+                      <button class="btn btn-sm btn-texto btn-perigo" type="submit">Excluir</button>
+                    </form>
+                  {% else %}
+                    <form class="inline" method="post" action="{{ url_for('produtos.reativar', produto_id=p.id) }}">
+                      <button class="btn btn-sm btn-texto" type="submit">Reativar</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Nenhuma peça encontrada</h3>
+        <p>{{ 'Tente outra busca.' if q or tipo or situacao else 'Cadastre a primeira peça do acervo.' }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

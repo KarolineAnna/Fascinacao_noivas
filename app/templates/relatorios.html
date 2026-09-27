@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Relatórios{% endblock %}
+{% macro reais_curto(c) %}{% set r = (c / 100) | round(0, 'floor') | int %}{{ 'R$ ' ~ ('{:,}'.format(r).replace(',', '.')) }}{% endmacro %}
+{% block conteudo %}
+  {% call cabecalho("Relatórios", "Financeiro") %}{% endcall %}
+
+  <div class="alternador abas-periodo">
+    {% for k, v in periodos.items() %}
+      <a href="{{ url_for('relatorios.pagina', periodo=k) }}" class="{{ 'ativo' if k == periodo }}">{{ v }}</a>
+    {% endfor %}
+  </div>
+  <p class="suave pequeno" style="margin: -4px 0 22px">De {{ de | data }} a {{ ate | data }}</p>
+
+  <div class="indicadores">
+    <div class="indicador ouro">
+      <div class="rotulo">Entradas no período</div>
+      <div class="valor num">{{ totais.entradas | brl }}</div>
+      <div class="detalhe">aluguel {{ totais.aluguel | brl }} · vendas {{ totais.vendas | brl }}</div>
+    </div>
+    <div class="indicador">
+      <div class="rotulo">Fichas no período</div>
+      <div class="valor num">{{ fichas.qtd }}</div>
+      <div class="detalhe">ticket médio {{ ticket | brl }} por ficha</div>
+    </div>
+    <div class="indicador salvia">
+      <div class="rotulo">Saldo (entradas − saídas)</div>
+      <div class="valor num {{ 'negativo' if totais.saldo < 0 }}">{{ totais.saldo | brl }}</div>
+      <div class="detalhe">saídas {{ totais.saidas | brl }}</div>
+    </div>
+    <div class="indicador terracota">
+      <div class="rotulo">Clientes que voltam</div>
+      <div class="valor num">{{ taxa_retorno }}%</div>
+      <div class="detalhe">{{ voltam | length }} de {{ com_ficha }} clientes alugaram 2 vezes ou mais</div>
+    </div>
+  </div>
+
+  {# ---------------- Faturamento por mês ---------------- #}
+  <section class="cartao">
+    <div class="cartao-titulo">
+      <h2>Faturamento por mês</h2>
+      <span class="suave pequeno">entradas pela data do pagamento</span>
+    </div>
+
+    <div class="grafico-legenda" aria-hidden="true">
+      <span><i class="amostra serie-1"></i>Aluguel</span>
+      <span><i class="amostra serie-2"></i>Vendas</span>
+      <span><i class="amostra serie-3"></i>Outras entradas</span>
+    </div>
+
+    <div class="grafico" id="grafico-faturamento" role="img"
+         aria-label="Entradas por mês, empilhadas em aluguel, vendas e outras entradas. Os valores estão na tabela abaixo.">
+      <div class="grafico-eixo">
+        {% for m in marcas | reverse %}<span style="bottom: {{ (100 * m / escala) | round(2) }}%">{{ reais_curto(m) }}</span>{% endfor %}
+      </div>
+      <div class="grafico-plot">
+        {% for m in marcas %}<div class="grafico-grade {{ 'base' if loop.first }}" style="bottom: {{ (100 * m / escala) | round(2) }}%"></div>{% endfor %}
+        <div class="grafico-colunas" style="--qtd: {{ meses | length }}">
+          {% for m in meses %}
+            <div class="grafico-coluna" tabindex="0"
+                 data-nome="{{ m.nome }}" data-aluguel="{{ m.aluguel | brl }}" data-vendas="{{ m.vendas | brl }}"
+                 data-outras="{{ m.outras | brl }}" data-entradas="{{ m.entradas | brl }}"
+                 data-saidas="{{ m.saidas | brl }}" data-saldo="{{ m.saldo | brl }}">
+              <div class="grafico-pilha" style="height: {{ (100 * m.entradas / escala) | round(2) }}%">
+                {% if m.chave == maior_mes %}<span class="grafico-rotulo">{{ reais_curto(m.entradas) }}</span>{% endif %}
+                {% for serie, valor in [('serie-3', m.outras), ('serie-2', m.vendas), ('serie-1', m.aluguel)] if valor %}
+                  <div class="grafico-segmento {{ serie }}" style="flex-grow: {{ valor }}"></div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div></div>
+      <div class="grafico-meses" style="--qtd: {{ meses | length }}">
+        {% for m in meses %}<span>{{ m.rotulo }}</span>{% endfor %}
+      </div>
+      <div class="grafico-dica" id="grafico-dica" hidden></div>
+    </div>
+
+    <div class="tabela-rolavel" style="margin-top: 24px">
+      <table class="tabela tabela-compacta">
+        <thead><tr><th>Mês</th><th class="direita">Aluguel</th><th class="direita">Vendas</th><th class="direita">Outras entradas</th>
+                   <th class="direita">Saídas</th><th class="direita">Saldo</th></tr></thead>
+        <tbody>
+          {% for m in meses | reverse %}
+            <tr>
+              <td>{{ m.nome[:1] | upper }}{{ m.nome[1:] }}</td>
+              <td class="direita num">{{ m.aluguel | brl }}</td>
+              <td class="direita num">{{ m.vendas | brl }}</td>
+              <td class="direita num">{{ m.outras | brl }}</td>
+              <td class="direita num">{{ m.saidas | brl }}</td>
+              <td class="direita num {{ 'valor-saida' if m.saldo < 0 }}"><strong>{{ m.saldo | brl }}</strong></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td>Total</td><td class="direita num">{{ totais.aluguel | brl }}</td><td class="direita num">{{ totais.vendas | brl }}</td>
+              <td class="direita num">{{ totais.outras | brl }}</td><td class="direita num">{{ totais.saidas | brl }}</td>
+              <td class="direita num">{{ totais.saldo | brl }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  {# ---------------- Peças ---------------- #}
+  <div class="resumos-financeiro" style="grid-template-columns: repeat(auto-fit, minmax(460px, 1fr))">
+    <section class="cartao cartao-sem-borda tabela-rolavel">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+        <h2>Peças mais alugadas</h2><span class="suave pequeno">top 10 no período</span>
+      </div>
+      {% if mais_alugadas %}
+        <table class="tabela">
+          <thead><tr><th>Peça</th><th class="centro">Vezes</th><th class="direita">Dias fora</th><th class="direita">Receita</th></tr></thead>
+          <tbody>
+            {% for p in mais_alugadas %}
+              <tr>
+                <td><span class="codigo">{{ p.codigo }}</span><span class="principal">{{ p.nome }}</span>
+                  <div class="suave pequeno">{{ [p.tipo, p.tamanho and 'Tam. ' ~ p.tamanho, p.cor] | select | join(' · ') }}</div></td>
+                <td class="centro num"><strong>{{ p.vezes }}</strong></td>
+                <td class="direita num">{{ p.dias | int }}</td>
+                <td class="direita num">{{ p.receita | brl }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="vazio"><p>Nenhum aluguel no período.</p></div>
+      {% endif %}
+    </section>
+
+    <section class="cartao cartao-sem-borda tabela-rolavel">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+        <h2>Peças paradas</h2><span class="suave pequeno">{{ paradas | length }} de {{ total_pecas }} sem aluguel no período</span>
+      </div>
+      {% if paradas %}
+        <table class="tabela">
+          <thead><tr><th>Peça</th><th>Último aluguel</th><th class="direita">Valor</th></tr></thead>
+          <tbody>
+            {% for p in paradas %}
+              <tr>
+                <td><span class="codigo">{{ p.codigo }}</span><span class="principal">{{ p.nome }}</span>
+                  <div class="suave pequeno">{{ [p.tipo, p.tamanho and 'Tam. ' ~ p.tamanho, p.cor] | select | join(' · ') }}</div></td>
+                <td>
+                  {% if p.ultimo %}{{ p.ultimo | data }}<div class="suave pequeno">há {{ dias_parada[p.id] }} dias · {{ p.vezes_total }} aluguel{{ 'is' if p.vezes_total != 1 }} no total</div>
+                  {% else %}<span class="selo selo-inativo">Nunca alugada</span>{% endif %}
+                </td>
+                <td class="direita num">{{ p.valor_aluguel | brl }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="suave pequeno" style="padding: 0 30px 20px; margin: 0">Peças paradas há muito tempo podem valer uma promoção ou a venda.</p>
+      {% else %}
+        <div class="vazio"><p>Todas as peças tiveram aluguel no período.</p></div>
+      {% endif %}
+    </section>
+  </div>
+
+  {# ---------------- Clientes ---------------- #}
+  <section class="cartao cartao-sem-borda tabela-rolavel" style="margin-top: 24px">
+    <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+      <h2>Clientes que voltam</h2><span class="suave pequeno">2 ou mais fichas em todo o histórico</span>
+    </div>
+    {% if voltam %}
+      <table class="tabela">
+        <thead><tr><th>Cliente</th><th class="centro">Fichas</th><th class="centro">No período</th><th>Primeira</th><th>Última</th>
+                   <th class="direita">Total em aluguéis</th><th class="direita">Compras</th></tr></thead>
+        <tbody>
+          {% for c in voltam %}
+            <tr>
+              <td><a class="principal" href="{{ url_for('clientes.ver', cliente_id=c.id) }}">{{ c.nome }}</a>
+                <div class="suave pequeno num">{{ c.telefone or '' }}</div></td>
+              <td class="centro num"><strong>{{ c.fichas }}</strong></td>
+              <td class="centro num">{{ c.no_periodo }}</td>
+              <td class="num">{{ c.primeira | data }}</td>
+              <td class="num">{{ c.ultima | data }}</td>
+              <td class="direita num">{{ c.total | brl }}</td>
+              <td class="direita num">{{ c.compras | brl }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio"><p>Ainda nenhum cliente com mais de uma ficha.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Dica ao passar o mouse (ou focar pelo teclado) em cada mês do gráfico.
+  (function () {
+    var grafico = document.getElementById("grafico-faturamento");
+    var dica = document.getElementById("grafico-dica");
+    if (!grafico) return;
+    function mostrar(col) {
+      var d = col.dataset;
+      dica.innerHTML =
+        '<div class="dica-titulo"></div>' +
+        '<div class="dica-linha"><i class="amostra serie-1"></i><span>Aluguel</span><b class="a"></b></div>' +
+        '<div class="dica-linha"><i class="amostra serie-2"></i><span>Vendas</span><b class="v"></b></div>' +
+        '<div class="dica-linha"><i class="amostra serie-3"></i><span>Outras entradas</span><b class="o"></b></div>' +
+        '<div class="dica-linha total"><span>Entradas</span><b class="e"></b></div>' +
+        '<div class="dica-linha"><span>Saídas</span><b class="s"></b></div>' +
+        '<div class="dica-linha"><span>Saldo</span><b class="l"></b></div>';
+      dica.querySelector(".dica-titulo").textContent = d.nome.charAt(0).toUpperCase() + d.nome.slice(1);
+      [["a", d.aluguel], ["v", d.vendas], ["o", d.outras], ["e", d.entradas], ["s", d.saidas], ["l", d.saldo]]
+        .forEach(function (p) { dica.querySelector("." + p[0]).textContent = p[1]; });
+      dica.hidden = false;
+      var g = grafico.getBoundingClientRect(), c = col.getBoundingClientRect();
+      // ao lado da coluna (à direita; se não couber, à esquerda), para não cobrir a barra
+      var x = c.right - g.left + 10;
+      if (x + dica.offsetWidth > g.width) x = c.left - g.left - dica.offsetWidth - 10;
+      dica.style.left = Math.max(0, x) + "px";
+      grafico.querySelectorAll(".grafico-coluna").forEach(function (o) { o.classList.toggle("apagada", o !== col); });
+    }
+    function esconder() {
+      dica.hidden = true;
+      grafico.querySelectorAll(".grafico-coluna").forEach(function (o) { o.classList.remove("apagada"); });
+    }
+    grafico.querySelectorAll(".grafico-coluna").forEach(function (col) {
+      col.addEventListener("mouseenter", function () { mostrar(col); });
+      col.addEventListener("focus", function () { mostrar(col); });
+      col.addEventListener("blur", esconder);
+    });
+    grafico.addEventListener("mouseleave", esconder);
+  })();
+</script>
+{% endblock %}

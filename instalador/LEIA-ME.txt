@@ -1,0 +1,106 @@
+﻿==============================================================
+  FASCINAÇÃO NOIVAS — Sistema de aluguel
+  Instalação, uso, atualização e backup
+==============================================================
+
+O sistema funciona sem internet. Ele roda no próprio computador
+e abre no navegador (Edge, Chrome etc.).
+
+ONDE FICA CADA COISA
+--------------------
+  Programa ........ C:\FascinacaoNoivas\FascinacaoNoivas.exe
+  Dados da loja ... C:\Fascinação Noivas Dados\
+                      fascinacao.db   -> banco de dados (fichas, clientes, produtos, caixa)
+                      backups\        -> cópias automáticas (as 30 mais recentes)
+                      sistema.log     -> registro técnico, para diagnóstico
+
+  O programa e os dados ficam em pastas SEPARADAS. Por isso,
+  instalar ou atualizar o programa nunca apaga os dados.
+
+
+1) INSTALAÇÃO NA LOJA (primeira vez)
+------------------------------------
+  1. Conecte o pendrive no computador da loja.
+  2. Abra a pasta "Fascinacao Noivas" do pendrive.
+  3. Dê dois cliques em  instalar.bat
+       - Se aparecer "O Windows protegeu o computador", clique em
+         "Mais informações" e depois em "Executar assim mesmo".
+       - Se aparecer erro de permissão, clique com o botão direito em
+         instalar.bat e escolha "Executar como administrador".
+  4. O instalador copia o programa, cria o atalho "Fascinação Noivas"
+     na área de trabalho e abre o sistema no navegador.
+  5. Na primeira vez o banco de dados é criado vazio. Comece
+     cadastrando as peças (menu Aluguel > Produtos de aluguel) e os
+     produtos à venda (menu Vendas > Produtos à venda). Peças também
+     podem ser cadastradas direto na ficha, pela busca de peças.
+
+  Recomendado: em Configurações > Backup automático, escolha uma
+  pasta do Google Drive para computador ou de um pendrive, para ter
+  uma cópia dos dados fora deste computador.
+
+
+2) USO NO DIA A DIA
+-------------------
+  - Para abrir: dois cliques no atalho "Fascinação Noivas" da área
+    de trabalho. O navegador abre sozinho.
+  - Não aparece janela preta: o sistema fica rodando em segundo
+    plano. Pode fechar e abrir a aba do navegador à vontade. Se
+    clicar no atalho com o sistema já aberto, só abre uma aba nova.
+  - Para encerrar: Configurações > "Encerrar o sistema". Também não
+    há problema em só desligar o computador.
+  - A cada abertura é feita uma cópia de segurança automática.
+  - O menu fica à esquerda (Aluguel, Vendas, Financeiro e
+    Configurações). O botão "Recolher menu" deixa só os ícones.
+  - No fim do dia: Financeiro > Fechar caixa mostra quanto deve
+    haver em cada forma de pagamento (fichas + vendas + entradas
+    − saídas do dia); digite o valor contado e registre.
+
+
+3) ATUALIZAÇÃO DO PROGRAMA (nova versão)
+----------------------------------------
+  1. Copie a nova pasta "Fascinacao Noivas" para o pendrive.
+  2. No computador da loja, dê dois cliques em  instalar.bat
+     (o mesmo arquivo da instalação).
+  3. Pronto. Ele fecha o sistema, troca só o programa e abre de novo.
+     Fichas, clientes, produtos, caixa e backups continuam iguais.
+
+  Se preferir fazer à mão: encerre o sistema (Configurações >
+  Encerrar o sistema) e substitua o arquivo
+  C:\FascinacaoNoivas\FascinacaoNoivas.exe pelo novo.
+
+
+4) RESTAURAR UM BACKUP
+----------------------
+  Use quando precisar voltar os dados para como estavam numa data
+  (ex.: algo foi apagado por engano ou o computador foi trocado).
+
+  1. No sistema, vá em Configurações > "Encerrar o sistema".
+  2. Abra a pasta  C:\Fascinação Noivas Dados\
+  3. Renomeie o arquivo  fascinacao.db  para
+     fascinacao-antes-da-restauracao.db   (assim nada se perde).
+  4. Abra a pasta de backups (backups\ ou a pasta escolhida em
+     Configurações). Os arquivos têm a data e a hora no nome:
+        fascinacao-2026-09-26_09-15-02.db  = 26/09/2026 às 09:15
+  5. Copie o backup desejado para  C:\Fascinação Noivas Dados\
+     e renomeie a cópia para  fascinacao.db
+  6. Abra o sistema pelo atalho. Os dados já estarão como naquele dia.
+
+
+5) TROCAR DE COMPUTADOR
+-----------------------
+  1. No computador antigo: Configurações > "Encerrar o sistema".
+  2. Copie a pasta inteira  C:\Fascinação Noivas Dados\  para o pendrive.
+  3. No computador novo, rode o instalar.bat (seção 1).
+  4. Encerre o sistema, cole a pasta "Fascinação Noivas Dados" em C:\
+     substituindo a que foi criada, e abra o sistema de novo.
+
+
+6) PROBLEMAS COMUNS
+-------------------
+  - O navegador não abriu: abra o navegador e digite
+    http://127.0.0.1:5780
+  - Antivírus bloqueou o programa: é comum com programas sem
+    assinatura digital. Adicione uma exceção para a pasta
+    C:\FascinacaoNoivas
+  - Mensagem "Não foi possível abrir o sistema": anote a mensagem e
+    envie junto o arquivo  C:\Fascinação Noivas Dados\sistema.log

@@ -1,0 +1,2 @@
+<script id="dados-controles" type="application/json">{{ {"formas": formas_pagamento(), "hoje": hoje.isoformat()} | tojson }}</script>
+<script src="{{ url_for('static', filename='js/controles.js') }}"></script>

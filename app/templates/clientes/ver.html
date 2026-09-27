@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_fin, selo_sit with context %}
+{% block titulo %}{{ cliente.nome }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho(cliente.nome, "Cliente") %}
+  {% endcall %}
+
+  <form method="post" class="cartao" data-rastrear data-alterado="{{ '1' if request.method == 'POST' else '0' }}">
+    <div class="cartao-titulo"><h2>Dados do cliente</h2></div>
+    <div class="campos">
+      <div class="campo c-8">
+        <label for="nome">Nome <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" value="{{ dados.nome }}" required>
+      </div>
+      <div class="campo c-4">
+        <label for="cpf">CPF <span class="obrigatorio">*</span></label>
+        <input type="text" id="cpf" name="cpf" value="{{ dados.cpf | cpf }}" required data-mascara="cpf" inputmode="numeric">
+      </div>
+      <div class="campo c-4">
+        <label for="telefone">Telefone</label>
+        <input type="tel" id="telefone" name="telefone" value="{{ dados.telefone }}" data-mascara="telefone">
+      </div>
+      <div class="campo c-8">
+        <label for="endereco">Endereço</label>
+        <input type="text" id="endereco" name="endereco" value="{{ dados.endereco }}">
+      </div>
+    </div>
+    <div class="acoes" style="margin-top: 24px">
+      <button class="btn btn-primario" type="submit">Salvar alterações</button>
+    </div>
+  </form>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+      <h2>Aluguéis</h2>
+      <span class="suave pequeno">{{ alugueis | length }} ficha{{ 's' if alugueis | length != 1 }}</span>
+    </div>
+    {% if alugueis %}
+      <table class="tabela">
+        <thead><tr><th>Ficha</th><th>Peças</th><th>Saída</th><th>Devolução</th><th>Situação</th><th class="direita">Valor</th><th>Pagamento</th></tr></thead>
+        <tbody>
+          {% for a in alugueis %}
+            <tr>
+              <td><a class="principal" href="{{ url_for('fichas.ver', ficha_id=a.id) }}">nº {{ a.id }}</a></td>
+              <td>{{ a.pecas or '—' }}</td>
+              <td class="num">{{ a.data_saida | data }}</td>
+              <td class="num">{{ a.data_devolucao | data }}</td>
+              <td>{{ selo_sit(a.situacao) }}</td>
+              <td class="direita num">{{ a.total | brl }}</td>
+              <td>{{ selo_fin(a.status_financeiro) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio"><p>Este cliente ainda não tem aluguéis.</p></div>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/mascaras.js') }}"></script>{% endblock %}

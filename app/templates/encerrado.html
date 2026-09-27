@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema encerrado · {{ NOME_LOJA }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/icone.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <span class="marca">
+      <span class="marca-nome">{{ NOME_LOJA }}</span>
+      <span class="marca-sub">Aluguel de trajes para noivas e padrinhos</span>
+    </span>
+  </header>
+  <main class="conteudo" style="max-width: 640px; text-align: center">
+    <div class="cartao">
+      <h1 style="font-size: 2.2rem">Sistema encerrado</h1>
+      <div class="ornamento" style="margin: 14px auto 18px"><span></span></div>
+      <p>Tudo foi salvo. Você já pode fechar esta aba.</p>
+      <p class="suave">Para usar de novo, abra o atalho <strong>Fascinação Noivas</strong> na área de trabalho.</p>
+    </div>
+  </main>
+</body>
+</html>

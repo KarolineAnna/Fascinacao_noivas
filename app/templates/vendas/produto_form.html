@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% set titulo = 'Editar produto' if produto else 'Novo produto à venda' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho(titulo, "Vendas") %}{% endcall %}
+
+  <form method="post" class="cartao" style="max-width: 760px" data-rastrear data-alterado="{{ '1' if request.method == 'POST' else '0' }}">
+    <div class="campos">
+      <div class="campo c-12">
+        <label for="nome">Nome <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" value="{{ dados.nome }}" placeholder="Ex.: Kaiak Aventura 100 ml" autofocus>
+      </div>
+      <div class="campo c-6">
+        <label for="categoria_id">Marca / categoria <span class="obrigatorio">*</span></label>
+        <select id="categoria_id" name="categoria_id">
+          <option value="">Selecione…</option>
+          {% for c in categorias %}<option value="{{ c.id }}" {{ 'selected' if dados.categoria_id == c.id|string }}>{{ c.nome }}</option>{% endfor %}
+        </select>
+        <div class="ajuda">As marcas/categorias são editadas em Configurações.</div>
+      </div>
+      <div class="campo c-6">
+        <label for="preco">Preço de venda (R$) <span class="obrigatorio">*</span></label>
+        <input type="text" id="preco" name="preco" value="{{ dados.preco }}" inputmode="decimal" placeholder="0,00">
+      </div>
+    </div>
+    <div class="acoes" style="margin-top: 26px">
+      <button class="btn btn-primario" type="submit">Salvar produto</button>
+    </div>
+  </form>
+{% endblock %}

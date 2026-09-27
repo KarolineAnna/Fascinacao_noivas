@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_fin, limpar_filtros with context %}
+{% block titulo %}Financeiro{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Financeiro", "Movimentações") %}
+    <a class="btn" href="{{ url_for('financeiro.novo_lancamento', tipo='entrada') }}">+ Entrada</a>
+    <a class="btn btn-primario" href="{{ url_for('financeiro.novo_lancamento', tipo='saida') }}">− Saída</a>
+  {% endcall %}
+
+  <div class="abas-periodo alternador">
+    <a href="{{ url_for('financeiro.lista', modo='dia') }}" class="{{ 'ativo' if modo == 'dia' }}">Dia</a>
+    <a href="{{ url_for('financeiro.lista', modo='mes') }}" class="{{ 'ativo' if modo == 'mes' }}">Mês</a>
+    <a href="{{ url_for('financeiro.lista', modo='periodo') }}" class="{{ 'ativo' if modo == 'periodo' }}">Período</a>
+  </div>
+
+  <form class="filtros" method="get">
+    <input type="hidden" name="modo" value="{{ modo }}">
+    {% if modo == 'dia' %}
+      <div class="campo"><label for="dia">Dia</label><input type="date" id="dia" name="dia" value="{{ filtros.dia }}"></div>
+    {% elif modo == 'mes' %}
+      <div class="campo"><label for="mes">Mês</label><input type="month" id="mes" name="mes" value="{{ filtros.mes }}"></div>
+    {% else %}
+      <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="{{ filtros.de }}"></div>
+      <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="{{ filtros.ate }}"></div>
+    {% endif %}
+    <div class="campo">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" name="tipo">
+        <option value="">Entradas e saídas</option>
+        {% for k, v in tipos.items() %}<option value="{{ k }}" {{ 'selected' if k == tipo }}>{{ v }}s</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="categoria">Categoria</label>
+      <select id="categoria" name="categoria">
+        <option value="">Todas</option>
+        <option value="aluguel" {{ 'selected' if categoria == 'aluguel' }}>Aluguel (fichas)</option>
+        <option value="venda" {{ 'selected' if categoria == 'venda' }}>Vendas</option>
+        {% for c in categorias %}<option value="{{ c.id }}" {{ 'selected' if categoria == c.id|string }}>{{ c.nome }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="forma">Forma de pagamento</label>
+      <select id="forma" name="forma">
+        <option value="">Todas</option>
+        {% for f in formas_filtro %}<option {{ 'selected' if f == forma }}>{{ f }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn" type="submit">Filtrar</button>
+    {{ limpar_filtros('financeiro.lista') }}
+  </form>
+
+  <div class="indicadores">
+    <div class="indicador salvia">
+      <div class="rotulo">Entradas · {{ descricao }}</div>
+      <div class="valor num">{{ entradas | brl }}</div>
+    </div>
+    <div class="indicador terracota">
+      <div class="rotulo">Saídas</div>
+      <div class="valor num">{{ saidas | brl }}</div>
+    </div>
+    <div class="indicador ouro">
+      <div class="rotulo">Saldo (entradas − saídas)</div>
+      <div class="valor num {{ 'negativo' if saldo < 0 }}">{{ saldo | brl }}</div>
+    </div>
+  </div>
+
+  <div>
+    <section class="cartao cartao-sem-borda tabela-rolavel">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+        <h2>Movimentações</h2><span class="suave pequeno">{{ movimentos | length }} no período</span>
+      </div>
+      {% if movimentos %}
+        <table class="tabela">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Forma</th><th>Origem</th><th class="direita">Valor</th><th></th></tr></thead>
+          <tbody>
+            {% for m in movimentos %}
+              <tr>
+                <td class="num">{{ m.data | data }}</td>
+                <td>
+                  <span class="principal">{{ m.descricao }}</span>
+                  {% if m.observacao %}<div class="suave pequeno">{{ m.observacao }}</div>{% endif %}
+                </td>
+                <td>{{ m.categoria }}</td>
+                <td>{{ m.forma or '—' }}</td>
+                <td><span class="selo selo-origem-{{ m.origem }}">{{ m.detalhe if m.origem == 'ficha' else origens[m.origem] }}</span></td>
+                <td class="direita num {{ 'valor-saida' if m.tipo == 'saida' else 'valor-entrada' }}">
+                  {{ '−' if m.tipo == 'saida' else '+' }} {{ m.valor | brl }}
+                </td>
+                <td class="direita">
+                  {% if m.origem == 'ficha' %}
+                    <a class="btn btn-sm btn-texto" href="{{ url_for('fichas.ver', ficha_id=m.ref_id) }}">Abrir ficha</a>
+                  {% elif m.origem == 'venda' %}
+                    <a class="btn btn-sm btn-texto" href="{{ url_for('vendas.ver', venda_id=m.ref_id) }}">Abrir venda</a>
+                  {% else %}
+                    <div class="acoes">
+                      <a class="btn btn-sm btn-texto" href="{{ url_for('financeiro.editar_lancamento', lancamento_id=m.ref_id) }}">Editar</a>
+                      <form class="inline" method="post" action="{{ url_for('financeiro.excluir_lancamento', lancamento_id=m.ref_id) }}"
+                            data-confirmar="Você gostaria de excluir este lançamento?"
+                            data-nota="“{{ m.descricao }}” · {{ m.valor | brl }} em {{ m.data | data }}">
+                        <input type="hidden" name="voltar" value="{{ request.full_path }}">
+                        <button class="btn btn-sm btn-texto btn-perigo" type="submit">Excluir</button>
+                      </form>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr><td colspan="5">Saldo do período</td><td class="direita num">{{ saldo | brl }}</td><td></td></tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <div class="vazio"><p>Nenhuma movimentação neste período.</p></div>
+      {% endif %}
+    </section>
+
+    <div class="resumos-financeiro">
+      <div class="cartao resumo">
+        <div class="cartao-titulo"><h2>Por categoria</h2></div>
+        {% for c in por_categoria %}
+          <div class="linha">
+            <span>{{ c.nome }}</span>
+            <span class="num">
+              {% if c.entradas %}<span class="valor-entrada">+ {{ c.entradas | brl }}</span>{% endif %}
+              {% if c.saidas %}<span class="valor-saida">− {{ c.saidas | brl }}</span>{% endif %}
+            </span>
+          </div>
+        {% else %}
+          <p class="suave">Nada no período.</p>
+        {% endfor %}
+      </div>
+      <div class="cartao resumo">
+        <div class="cartao-titulo"><h2>Por forma</h2></div>
+        {% for nome, valor in por_forma %}
+          <div class="linha"><span>{{ nome }}</span><span class="num {{ 'valor-saida' if valor < 0 }}">{{ valor | brl }}</span></div>
+        {% else %}
+          <p class="suave">Nada no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <section class="cartao cartao-sem-borda tabela-rolavel" style="margin-top: 28px" id="a-receber">
+    <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+      <h2>A receber</h2><span class="suave pequeno">{{ total_a_receber | brl }} em {{ pendentes | length }} ficha{{ 's' if pendentes | length != 1 }}</span>
+    </div>
+    {% if pendentes %}
+      <table class="tabela">
+        <thead><tr><th>Ficha</th><th>Cliente</th><th>Saída</th><th class="direita">Valor</th>
+                   <th class="direita">Entrada</th><th class="direita">Restante</th><th class="direita">Multa</th><th>Pagamento</th><th class="direita">Receber restante</th></tr></thead>
+        <tbody>
+          {% for p in pendentes %}
+            <tr>
+              <td><a class="principal" href="{{ url_for('fichas.ver', ficha_id=p.id) }}">nº {{ p.id }}</a></td>
+              <td><span class="principal">{{ p.cliente_nome }}</span><div class="suave pequeno num">{{ p.cliente_telefone or '' }}</div></td>
+              <td class="num">{{ p.data_saida | data }}</td>
+              <td class="direita num">{{ p.total | brl }}</td>
+              <td class="direita num">{{ p.entrada_efetiva | brl }}</td>
+              {% set restante_aberto = p.restante if p.status_financeiro != 'quitada' else 0 %}
+              <td class="direita num"><strong>{{ restante_aberto | brl }}</strong></td>
+              <td class="direita num {{ 'valor-saida' if p.multa_pendente }}">{{ p.multa_pendente | brl if p.multa_pendente else '—' }}</td>
+              <td>{{ selo_fin(p.status_financeiro) }}</td>
+              <td>
+                {% if not restante_aberto %}
+                  <a class="btn btn-sm btn-texto" href="{{ url_for('fichas.ver', ficha_id=p.id) }}">Receber multa na ficha</a>
+                {% else %}
+                <form class="form-receber" method="post" action="{{ url_for('fichas.quitar', ficha_id=p.id) }}"
+                      data-confirmar="Você gostaria de marcar o restante como pago?"
+                      data-nota="{{ p.restante | brl }} de {{ p.cliente_nome }}, com a data de hoje.">
+                  <input type="hidden" name="voltar" value="{{ request.full_path }}">
+                  <select name="forma" required aria-label="Forma de pagamento">
+                    <option value="">Forma…</option>
+                    {% for f in formas %}<option>{{ f }}</option>{% endfor %}
+                  </select>
+                  <button class="btn btn-sm" type="submit">Recebido hoje</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="5">Total a receber (restantes + multas)</td><td class="direita num" colspan="2">{{ total_a_receber | brl }}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    {% else %}
+      <div class="vazio"><p>Nenhum valor em aberto. Todas as fichas estão quitadas.</p></div>
+    {% endif %}
+  </section>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

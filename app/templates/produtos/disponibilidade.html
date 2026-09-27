@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_sit, limpar_filtros with context %}
+{% block titulo %}Disponibilidade{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Disponibilidade", "Aluguel") %}{% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo"><label for="de">De</label><input type="date" id="de" name="de" value="{{ de.isoformat() }}"></div>
+    <div class="campo"><label for="ate">Até</label><input type="date" id="ate" name="ate" value="{{ ate.isoformat() }}"></div>
+    <div class="campo campo-busca">
+      <label for="q">Peça</label>
+      <input type="search" id="q" name="q" value="{{ q }}" placeholder="Nome, código, tipo, cor ou tamanho">
+    </div>
+    <label class="check"><input type="checkbox" name="livres" value="1" {{ 'checked' if so_livres }}> Só as disponíveis</label>
+    <button class="btn" type="submit">Consultar</button>
+    {{ limpar_filtros('produtos.disponibilidade') }}
+  </form>
+
+  <div class="indicadores">
+    <div class="indicador salvia">
+      <div class="rotulo">Disponíveis de {{ de | data }}{% if ate != de %} a {{ ate | data }}{% endif %}</div>
+      <div class="valor num">{{ livres }} <span class="suave" style="font-size: 1.1rem">de {{ total }}</span></div>
+      <div class="detalhe">peças do acervo{{ ' (com a busca)' if q }}</div>
+    </div>
+  </div>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if linhas %}
+      <table class="tabela">
+        <thead><tr><th>Código</th><th>Peça</th><th>Tamanho</th><th>Cor</th><th>No período</th></tr></thead>
+        <tbody>
+          {% for l in linhas %}
+            {% set p = l.peca %}
+            <tr>
+              <td><span class="codigo">{{ p.codigo }}</span></td>
+              <td><span class="principal">{{ p.nome }}</span><div class="suave pequeno">{{ p.tipo }}</div></td>
+              <td>{{ p.tamanho or '—' }}</td>
+              <td>{{ p.cor or '—' }}</td>
+              <td>
+                {% if l.ocupacoes %}
+                  <span class="selo selo-peca-alugada">Ocupada</span>
+                  {% for o in l.ocupacoes %}
+                    <div class="suave pequeno" style="margin-top: 4px">
+                      <a href="{{ url_for('fichas.ver', ficha_id=o.ficha_id) }}">Ficha nº {{ o.ficha_id }}</a> · {{ o.cliente_nome }}
+                      · {{ o.data_saida | data }} a {{ o.data_devolucao | data }}
+                      {% if o.atrasada %}<span class="selo selo-atraso">atrasada</span>{% endif %}
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <span class="selo selo-peca-disponivel">Disponível</span>
+                  {% if l.lavagem %}<div class="aviso-peca pequeno">Em lavagem hoje: confira se ficará pronta.</div>{% endif %}
+                  {% if l.fora_agora and l.fora_agora.atrasada %}
+                    <div class="aviso-peca pequeno" style="color: #9A5842">
+                      Atenção: ainda não foi devolvida (<a href="{{ url_for('fichas.ver', ficha_id=l.fora_agora.ficha_id) }}">ficha nº {{ l.fora_agora.ficha_id }}</a>,
+                      devolução prevista em {{ l.fora_agora.data_devolucao | data }}).
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio"><h3>Nenhuma peça encontrada</h3><p>Ajuste a busca ou o período.</p></div>
+    {% endif %}
+  </div>
+{% endblock %}

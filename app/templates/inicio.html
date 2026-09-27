@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block titulo %}Início{% endblock %}
+{% block conteudo %}
+  <section class="chamada-ficha">
+    <div>
+      <div class="sobretitulo">Novo aluguel</div>
+      <h2>Registrar uma ficha de aluguel</h2>
+      <p>Cliente, peças, datas e pagamento em uma só tela.</p>
+    </div>
+    <a class="btn btn-destaque btn-destaque-grande" href="{{ url_for('fichas.nova') }}">+ Nova ficha</a>
+  </section>
+
+  {% include "_atrasadas.html" %}
+
+  <div class="cabecalho-pagina" style="margin-bottom: 18px">
+    <div>
+      <div class="sobretitulo">Hoje</div>
+      <h1 style="font-size: 2rem">{{ dia_extenso[:1] | upper }}{{ dia_extenso[1:] }}</h1>
+      <div class="ornamento"><span></span></div>
+    </div>
+  </div>
+
+  <div class="indicadores painel-inicio">
+    <a class="indicador ouro" href="{{ url_for('agenda.saidas') }}">
+      <div class="rotulo">Saídas de hoje</div>
+      <div class="valor num">{{ resumo.saidas }}</div>
+      <div class="detalhe">ficha{{ 's' if resumo.saidas != 1 }} para retirar →</div>
+    </a>
+    <a class="indicador salvia" href="{{ url_for('agenda.devolucoes') }}">
+      <div class="rotulo">Devoluções de hoje</div>
+      <div class="valor num">{{ resumo.devolucoes }}</div>
+      <div class="detalhe">ficha{{ 's' if resumo.devolucoes != 1 }} para receber de volta →</div>
+    </a>
+    <a class="indicador" href="{{ url_for('produtos.lavagem') }}">
+      <div class="rotulo">Peças em lavagem</div>
+      <div class="valor num">{{ resumo.lavagem }}</div>
+      <div class="detalhe">aguardando “Disponibilizar” →</div>
+    </a>
+    <a class="indicador terracota" href="{{ url_for('financeiro.lista') }}#a-receber">
+      <div class="rotulo">A receber</div>
+      <div class="valor num">{{ resumo.a_receber | brl }}</div>
+      <div class="detalhe">saldo em aberto das fichas →</div>
+    </a>
+    <a class="indicador" href="{{ url_for('financeiro.fechamento') }}">
+      <div class="rotulo">Movimento de hoje</div>
+      <div class="valor num">{{ resumo.recebido_hoje | brl }}</div>
+      <div class="detalhe">entradas − saídas · fechar caixa →</div>
+    </a>
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

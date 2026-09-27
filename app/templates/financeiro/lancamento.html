@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% set titulo = 'Editar lançamento' if lancamento else ('Nova entrada' if dados.tipo == 'entrada' else 'Nova saída') %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho(titulo, "Financeiro") %}{% endcall %}
+
+  <form method="post" class="cartao" style="max-width: 820px" data-rastrear data-alterado="{{ '1' if request.method == 'POST' else '0' }}">
+    <div class="campos">
+      <div class="campo c-12">
+        <span class="rotulo">Tipo <span class="obrigatorio">*</span></span>
+        <div class="alternador alternador-opcoes">
+          {% for k, v in tipos.items() %}
+            <label class="{{ 'ativo' if dados.tipo == k }}">
+              <input type="radio" name="tipo" value="{{ k }}" {{ 'checked' if dados.tipo == k }}> {{ v }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="campo c-4">
+        <label for="data">Data <span class="obrigatorio">*</span></label>
+        <input type="date" id="data" name="data" value="{{ dados.data }}">
+      </div>
+      <div class="campo c-8">
+        <label for="descricao">Descrição <span class="obrigatorio">*</span></label>
+        <input type="text" id="descricao" name="descricao" value="{{ dados.descricao }}" placeholder="Ex.: Pagamento da lavanderia" autofocus>
+      </div>
+      <div class="campo c-4">
+        <label for="categoria_id">Categoria <span class="obrigatorio">*</span></label>
+        <select id="categoria_id" name="categoria_id">
+          <option value="">Selecione…</option>
+          {% for c in categorias %}<option value="{{ c.id }}" {{ 'selected' if dados.categoria_id == c.id|string }}>{{ c.nome }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="campo c-4">
+        <label for="valor">Valor (R$) <span class="obrigatorio">*</span></label>
+        <input type="text" id="valor" name="valor" value="{{ dados.valor }}" inputmode="decimal" placeholder="0,00">
+      </div>
+      <div class="campo c-4">
+        <label for="forma">Forma de pagamento <span class="obrigatorio">*</span></label>
+        <select id="forma" name="forma">
+          <option value="">Selecione…</option>
+          {% for f in formas %}<option {{ 'selected' if f == dados.forma }}>{{ f }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="campo c-12">
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" name="observacao" placeholder="Opcional">{{ dados.observacao }}</textarea>
+      </div>
+    </div>
+    <div class="acoes" style="margin-top: 26px">
+      <button class="btn btn-primario" type="submit">Salvar lançamento</button>
+    </div>
+  </form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Destaca a opção escolhida (Entrada / Saída)
+  document.querySelectorAll(".alternador-opcoes input").forEach(function (r) {
+    r.addEventListener("change", function () {
+      document.querySelectorAll(".alternador-opcoes label").forEach(function (l) {
+        l.classList.toggle("ativo", l.querySelector("input").checked);
+      });
+    });
+  });
+</script>
+{% endblock %}

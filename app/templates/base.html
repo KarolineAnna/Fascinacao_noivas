@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} · {{ NOME_LOJA }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/icone.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/flatpickr/flatpickr.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/flatpickr/plugins/monthSelect.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    // Aplica o menu recolhido antes de desenhar a página (evita “piscar”).
+    try { if (localStorage.getItem("fascinacao-menu") === "recolhido") document.documentElement.classList.add("menu-recolhido"); } catch (e) {}
+  </script>
+</head>
+<body class="com-menu">
+  {% set ep = request.endpoint or '' %}
+  {% include "_menu.html" %}
+
+  <main class="conteudo">
+    {% if ep != 'agenda.inicio' %}
+      <nav class="barra-voltar">
+        <a class="voltar" href="{{ voltar_padrao() }}" data-voltar-app>
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Voltar
+        </a>
+      </nav>
+    {% endif %}
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% if mensagens %}
+        <div class="avisos">
+          {% for categoria, texto in mensagens %}
+            <div class="aviso aviso-{{ categoria }}">{{ texto }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='vendor/flatpickr/flatpickr.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/flatpickr/pt.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/flatpickr/plugins/monthSelect.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/janela.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/datas.js') }}"></script>
+  {% block scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/navegacao.js') }}"></script>
+  <script>
+    (function () {
+      var botao = document.getElementById("menu-recolher");
+      function rotular() {
+        var r = document.documentElement.classList.contains("menu-recolhido");
+        botao.setAttribute("aria-label", r ? "Expandir menu" : "Recolher menu");
+        botao.title = r ? "Expandir menu" : "Recolher menu";
+        botao.querySelector(".menu-rotulo").textContent = r ? "Expandir menu" : "Recolher menu";
+      }
+      botao.addEventListener("click", function () {
+        var r = document.documentElement.classList.toggle("menu-recolhido");
+        try { localStorage.setItem("fascinacao-menu", r ? "recolhido" : "aberto"); } catch (e) {}
+        rotular();
+      });
+      rotular();
+      // mantém visível o item da tela aberta em telas baixas
+      var ativo = document.querySelector(".menu-item.ativo");
+      if (ativo) ativo.scrollIntoView({ block: "nearest" });
+    })();
+  </script>
+</body>
+</html>

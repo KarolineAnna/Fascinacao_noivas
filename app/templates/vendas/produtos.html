@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, limpar_filtros with context %}
+{% block titulo %}Produtos à venda{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Produtos à venda", "Vendas") %}
+    <a class="btn btn-primario" href="{{ url_for('vendas.novo_produto') }}">+ Novo produto</a>
+  {% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo campo-busca">
+      <label for="q">Buscar</label>
+      <input type="search" id="q" name="q" value="{{ q }}" placeholder="Nome do produto">
+    </div>
+    <div class="campo">
+      <label for="categoria">Marca / categoria</label>
+      <select id="categoria" name="categoria">
+        <option value="">Todas</option>
+        {% for c in categorias %}<option value="{{ c.id }}" {{ 'selected' if categoria == c.id|string }}>{{ c.nome }}</option>{% endfor %}
+      </select>
+    </div>
+    <label class="check"><input type="checkbox" name="inativos" value="1" {{ 'checked' if inativos }}> Mostrar arquivados</label>
+    <button class="btn" type="submit">Filtrar</button>
+    {{ limpar_filtros('vendas.produtos') }}
+  </form>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if produtos %}
+      <table class="tabela">
+        <thead><tr><th>Produto</th><th>Marca / categoria</th><th class="direita">Preço de venda</th><th></th></tr></thead>
+        <tbody>
+          {% for p in produtos %}
+            <tr class="{{ 'inativo' if not p.ativo }}">
+              <td class="principal">{{ p.nome }} {% if not p.ativo %}<span class="selo selo-inativo">Arquivado</span>{% endif %}</td>
+              <td>{{ p.categoria }}</td>
+              <td class="direita num">{{ p.preco | brl }}</td>
+              <td>
+                <div class="acoes">
+                  <a class="btn btn-sm btn-texto" href="{{ url_for('vendas.editar_produto', produto_id=p.id) }}">Editar</a>
+                  {% if p.ativo %}
+                    <form class="inline" method="post" action="{{ url_for('vendas.excluir_produto', produto_id=p.id) }}"
+                          data-confirmar="Você gostaria de excluir “{{ p.nome }}”?"
+                          data-nota="Se ele já aparece em alguma venda, será apenas arquivado para manter o histórico.">
+                      <button class="btn btn-sm btn-texto btn-perigo" type="submit">Excluir</button>
+                    </form>
+                  {% else %}
+                    <form class="inline" method="post" action="{{ url_for('vendas.reativar_produto', produto_id=p.id) }}">
+                      <button class="btn btn-sm btn-texto" type="submit">Reativar</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Nenhum produto encontrado</h3>
+        <p>{{ 'Tente outra busca.' if q or categoria else 'Cadastre os produtos que a loja vende (Natura, Avon, mel…).' }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

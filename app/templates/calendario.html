@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Calendário{% endblock %}
+{% set LIMITE = 3 %}
+{% block conteudo %}
+  {% call cabecalho("Calendário", "Aluguel") %}{% endcall %}
+
+  <div class="navegador-data">
+    <div class="dia">
+      <a class="btn btn-icone" href="{{ url_for('agenda.calendario', mes=anterior.strftime('%Y-%m')) }}" title="Mês anterior">‹</a>
+      <div>
+        <div class="extenso">{{ titulo_mes[:1] | upper }}{{ titulo_mes[1:] }}</div>
+        <div class="suave pequeno">{{ total_saidas }} saída{{ 's' if total_saidas != 1 }} · {{ total_devolucoes }} devoluç{{ 'ões' if total_devolucoes != 1 else 'ão' }}</div>
+      </div>
+      <a class="btn btn-icone" href="{{ url_for('agenda.calendario', mes=seguinte.strftime('%Y-%m')) }}" title="Mês seguinte">›</a>
+    </div>
+    <form method="get" style="display: flex; gap: 10px; align-items: center">
+      <input type="month" name="mes" value="{{ primeiro.strftime('%Y-%m') }}" onchange="this.form.submit()" aria-label="Escolher mês">
+      {% if primeiro.strftime('%Y-%m') != hoje.strftime('%Y-%m') %}<a class="btn btn-texto" href="{{ url_for('agenda.calendario') }}">Este mês</a>{% endif %}
+    </form>
+  </div>
+
+  <div class="calendario-legenda">
+    <span><i class="marca-evento saida"></i>Saída</span>
+    <span><i class="marca-evento devolucao"></i>Devolução</span>
+    <span><span class="evento-feito">✓</span> já retirada / devolvida</span>
+    <span><span class="selo selo-atraso">atrasada</span></span>
+  </div>
+
+  <div class="calendario">
+    {% for nome in ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] %}<div class="calendario-semana">{{ nome }}</div>{% endfor %}
+    {% for semana in semanas %}
+      {% for dia in semana %}
+        {% set lista = eventos.get(dia.isoformat(), []) %}
+        <div class="calendario-dia {{ 'fora' if dia.month != primeiro.month }} {{ 'hoje' if dia == hoje }} {{ 'cheio' if lista | length > LIMITE }}">
+          <div class="calendario-cabeca">
+            <a class="calendario-numero" href="{{ url_for('agenda.saidas', data=dia.isoformat()) }}" title="Ver saídas de {{ dia | data }}">{{ dia.day }}</a>
+            {% if lista %}<span class="calendario-contagem">{{ lista | length }}</span>{% endif %}
+          </div>
+          {% for e in lista[:LIMITE] %}
+            <a class="evento {{ e.tipo }} {{ 'feito' if e.feito }} {{ 'atrasado' if e.atrasada }}"
+               href="{{ url_for('fichas.ver', ficha_id=e.ficha.id) }}"
+               title="{{ 'Saída' if e.tipo == 'saida' else 'Devolução' }} · ficha nº {{ e.ficha.id }} · {{ e.ficha.cliente_nome }}{{ ' · atrasada' if e.atrasada }}">
+              <i class="marca-evento {{ e.tipo }}"></i>
+              <span class="evento-nome">{{ e.ficha.cliente_nome }}</span>
+              {% if e.feito %}<span class="evento-feito">✓</span>{% endif %}
+            </a>
+          {% endfor %}
+          {% if lista | length > LIMITE %}
+            <a class="evento-mais" href="{{ url_for('agenda.saidas', data=dia.isoformat()) }}">+ {{ lista | length - LIMITE }} mais</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+{% endblock %}

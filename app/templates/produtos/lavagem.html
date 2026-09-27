@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Peças em lavagem{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Peças em lavagem", "Acervo") %}
+    <a class="btn btn-texto" href="{{ url_for('produtos.lista') }}">Ver todo o acervo</a>
+  {% endcall %}
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if pecas %}
+      <table class="tabela">
+        <thead>
+          <tr><th>Código</th><th>Peça</th><th>Devolvida em</th><th>Veio da ficha</th><th>Próxima saída</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for p in pecas %}
+            {% set prox = proximas[p.id] %}
+            <tr>
+              <td><span class="codigo">{{ p.codigo }}</span></td>
+              <td>
+                <span class="principal">{{ p.nome }}</span>
+                <div class="suave pequeno">{{ [p.tamanho and 'Tam. ' ~ p.tamanho, p.cor] | select | join(' · ') }}</div>
+              </td>
+              <td class="num">
+                {{ p.lavagem_desde | data }}
+                {% set dias = (hoje - (p.lavagem_desde | data_iso)).days %}
+                <div class="suave pequeno">{{ 'hoje' if dias == 0 else ('há ' ~ dias ~ ' dia' ~ ('s' if dias != 1 else '')) }}</div>
+              </td>
+              <td>
+                {% if p.ficha_id %}<a href="{{ url_for('fichas.ver', ficha_id=p.ficha_id) }}">nº {{ p.ficha_id }}</a>
+                  <div class="suave pequeno">{{ p.cliente_nome }}</div>{% else %}—{% endif %}
+              </td>
+              <td class="num">
+                {% if prox %}
+                  <a href="{{ url_for('fichas.ver', ficha_id=prox.id) }}">{{ prox.data_saida | data }}</a>
+                  <div class="suave pequeno">{{ prox.cliente_nome }}</div>
+                {% else %}<span class="suave">sem reserva</span>{% endif %}
+              </td>
+              <td class="direita">
+                <form class="inline" method="post" action="{{ url_for('produtos.disponibilizar', produto_id=p.id) }}">
+                  <button class="btn btn-sm btn-primario" type="submit">Disponibilizar</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Nenhuma peça em lavagem</h3>
+        <p>Quando uma ficha é marcada como “Devolvida”, as peças aparecem aqui até serem disponibilizadas.</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

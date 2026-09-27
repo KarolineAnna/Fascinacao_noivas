@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% set titulo = ('Editar venda nº ' ~ venda.id) if venda else 'Nova venda' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho(titulo, "Vendas") %}{% endcall %}
+
+  <form method="post" id="form-venda" autocomplete="off" novalidate data-rastrear
+        data-alterado="{{ '1' if request.method == 'POST' else '0' }}">
+    <div class="grade-2">
+      <div>
+        <section class="cartao">
+          <div class="cartao-titulo"><h2><span class="etapa">i.</span>Produtos</h2></div>
+          <div class="campo seletor">
+            <label for="busca-produto">Adicionar produto</label>
+            <input type="search" id="busca-produto" placeholder="Digite o nome ou a marca do produto">
+            <ul class="sugestoes" id="sugestoes" hidden></ul>
+          </div>
+          <div class="itens-ficha tabela-rolavel">
+            <table class="tabela" id="tabela-itens">
+              <thead><tr><th>Produto</th><th class="direita">Preço</th><th class="centro">Qtd.</th><th class="direita">Subtotal</th><th></th></tr></thead>
+              <tbody id="itens"></tbody>
+            </table>
+            <div class="vazio" id="sem-itens" style="padding: 28px">Nenhum produto adicionado ainda.</div>
+          </div>
+        </section>
+
+        <section class="cartao">
+          <div class="cartao-titulo"><h2><span class="etapa">ii.</span>Pagamento e cliente</h2></div>
+          <div class="campos">
+            <div class="campo c-4">
+              <label for="forma">Forma de pagamento <span class="obrigatorio">*</span></label>
+              <select id="forma" name="forma">
+                <option value="">Selecione…</option>
+                {% for f in formas %}<option {{ 'selected' if f == dados.forma }}>{{ f }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="campo c-4">
+              <label for="data">Data <span class="obrigatorio">*</span></label>
+              <input type="date" id="data" name="data" value="{{ dados.data }}">
+            </div>
+            <div class="campo c-4">
+              <label for="cliente_nome">Cliente (opcional)</label>
+              <input type="text" id="cliente_nome" name="cliente_nome" value="{{ dados.cliente_nome }}"
+                     list="lista-clientes" placeholder="Pode deixar em branco">
+              <input type="hidden" id="cliente_id" name="cliente_id" value="{{ dados.cliente_id }}">
+              <datalist id="lista-clientes">
+                {% for c in clientes %}<option value="{{ c.nome }}" label="{{ c.cpf }}"></option>{% endfor %}
+              </datalist>
+              <div class="ajuda" id="cliente-ajuda">Escolha um cliente cadastrado ou digite um nome.</div>
+            </div>
+            <div class="campo c-12">
+              <label for="observacao">Observação</label>
+              <textarea id="observacao" name="observacao" placeholder="Opcional">{{ dados.observacao }}</textarea>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="lateral">
+        <div class="cartao resumo">
+          <div class="cartao-titulo"><h2>Resumo</h2></div>
+          <div class="linha"><span>Itens</span><span class="num" id="resumo-qtd">0</span></div>
+          <div class="linha destaque"><span>Total</span><span class="num" id="resumo-total">R$ 0,00</span></div>
+          <button class="btn btn-primario btn-bloco" type="submit" style="margin-top: 18px">Salvar venda</button>
+        </div>
+      </aside>
+    </div>
+  </form>
+
+  <script id="dados-venda" type="application/json">
+    {{ {"catalogo": catalogo, "itens": dados["itens"], "clientes": clientes} | tojson }}
+  </script>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/venda.js') }}"></script>{% endblock %}

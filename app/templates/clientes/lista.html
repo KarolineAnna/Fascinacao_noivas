@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, limpar_filtros with context %}
+{% block titulo %}Clientes{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Clientes", "Cadastro") %}
+  {% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo campo-busca">
+      <label for="q">Buscar por nome ou CPF</label>
+      <input type="search" id="q" name="q" value="{{ q }}" placeholder="Ex.: Maria ou 123.456" autofocus>
+    </div>
+    <button class="btn" type="submit">Buscar</button>
+    {{ limpar_filtros('clientes.lista') }}
+  </form>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if clientes %}
+      <table class="tabela">
+        <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Endereço</th><th class="centro">Aluguéis</th></tr></thead>
+        <tbody>
+          {% for c in clientes %}
+            <tr>
+              <td><a class="principal" href="{{ url_for('clientes.ver', cliente_id=c.id) }}">{{ c.nome }}</a></td>
+              <td class="num">{{ c.cpf | cpf }}</td>
+              <td class="num">{{ c.telefone or '—' }}</td>
+              <td>{{ c.endereco or '—' }}</td>
+              <td class="centro num">{{ c.qtd_alugueis }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Nenhum cliente encontrado</h3>
+        <p>{{ 'Tente outra busca.' if q else 'Os clientes são cadastrados ao criar uma ficha de aluguel.' }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

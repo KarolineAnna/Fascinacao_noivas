@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Fechar caixa{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Fechar caixa", "Financeiro") %}{% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo"><label for="data">Dia do fechamento</label>
+      <input type="date" id="data" name="data" value="{{ dia.isoformat() }}" onchange="this.form.submit()"></div>
+    {% if fechados %}<span class="selo selo-quitada" style="margin-bottom: 14px">Caixa fechado</span>{% endif %}
+  </form>
+
+  <form method="post" data-rastrear data-alterado="0">
+    <input type="hidden" name="data" value="{{ dia.isoformat() }}">
+    <section class="cartao cartao-sem-borda tabela-rolavel">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+        <h2>Esperado por forma de pagamento</h2>
+        <span class="suave pequeno">fichas + vendas + entradas − saídas do dia</span>
+      </div>
+      <table class="tabela tabela-fechamento">
+        <thead>
+          <tr><th>Forma</th><th class="direita">Fichas</th><th class="direita">Vendas</th><th class="direita">Entradas</th>
+              <th class="direita">Saídas</th><th class="direita">Esperado</th><th class="direita">Contado (R$)</th><th class="direita">Diferença</th></tr>
+        </thead>
+        <tbody>
+          {% for r in linhas %}
+            {% set f = fechados.get(r.forma) %}
+            <tr data-esperado="{{ r.esperado }}">
+              <td class="principal">{{ r.forma }}</td>
+              <td class="direita num">{{ r.fichas | brl }}</td>
+              <td class="direita num">{{ r.vendas | brl }}</td>
+              <td class="direita num">{{ r.entradas | brl }}</td>
+              <td class="direita num valor-saida">{{ ('− ' ~ (r.saidas | brl)) if r.saidas else (r.saidas | brl) }}</td>
+              <td class="direita num"><strong>{{ r.esperado | brl }}</strong></td>
+              <td class="direita">
+                <input type="text" name="contado_{{ r.forma }}" inputmode="decimal" placeholder="0,00"
+                       value="{{ f.contado | campo_valor if f else '' }}" class="campo-contado" aria-label="Valor contado em {{ r.forma }}">
+              </td>
+              <td class="direita num diferenca">—</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><td colspan="5">Total esperado</td><td class="direita num">{{ total_esperado | brl }}</td>
+              <td class="direita num" id="total-contado">—</td><td class="direita num" id="total-diferenca">—</td></tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <section class="cartao">
+      <div class="campo">
+        <label for="observacao">Observação do fechamento</label>
+        <textarea id="observacao" name="observacao" placeholder="Opcional: ex.: troco deixado no caixa">{{ observacao }}</textarea>
+      </div>
+      <div class="acoes" style="margin-top: 20px">
+        <button class="btn btn-primario" type="submit">{{ 'Atualizar fechamento' if fechados else 'Registrar fechamento' }}</button>
+        <a class="btn btn-texto" href="{{ url_for('financeiro.lista', modo='dia', dia=dia.isoformat()) }}">Ver movimentações do dia</a>
+      </div>
+    </section>
+  </form>
+
+  {% if ultimos %}
+    <section class="cartao cartao-sem-borda tabela-rolavel">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0"><h2>Últimos fechamentos</h2></div>
+      <table class="tabela">
+        <thead><tr><th>Dia</th><th class="direita">Esperado</th><th class="direita">Contado</th><th class="direita">Diferença</th><th></th></tr></thead>
+        <tbody>
+          {% for u in ultimos %}
+            {% set dif = u.contado - u.esperado %}
+            <tr>
+              <td class="num">{{ u.data | data }}</td>
+              <td class="direita num">{{ u.esperado | brl }}</td>
+              <td class="direita num">{{ u.contado | brl }}</td>
+              <td class="direita num {{ 'valor-saida' if dif < 0 else ('valor-entrada' if dif > 0) }}">{{ dif | brl }}</td>
+              <td class="direita"><a class="btn btn-sm btn-texto" href="{{ url_for('financeiro.fechamento', data=u.data) }}">Abrir</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    function centavos(t) {
+      var s = (t || "").replace(/R\$|\s/g, "");
+      if (!s) return null;
+      if (s.indexOf(",") >= 0) s = s.replace(/\./g, "").replace(",", ".");
+      else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+      var n = parseFloat(s);
+      return isNaN(n) ? null : Math.round(n * 100);
+    }
+    function brl(c) {
+      var neg = c < 0; c = Math.abs(c);
+      return (neg ? "−R$ " : "R$ ") + Math.floor(c / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + ("0" + c % 100).slice(-2);
+    }
+    function atualizar() {
+      var totalC = 0, totalD = 0, algum = false;
+      document.querySelectorAll(".tabela-fechamento tbody tr").forEach(function (tr) {
+        var c = centavos(tr.querySelector(".campo-contado").value);
+        var cel = tr.querySelector(".diferenca");
+        if (c === null) { cel.textContent = "—"; cel.className = "direita num diferenca"; return; }
+        algum = true;
+        var d = c - parseInt(tr.dataset.esperado, 10);
+        totalC += c; totalD += d;
+        cel.textContent = d === 0 ? "confere" : brl(d);
+        cel.className = "direita num diferenca " + (d < 0 ? "valor-saida" : d > 0 ? "valor-entrada" : "confere");
+      });
+      document.getElementById("total-contado").textContent = algum ? brl(totalC) : "—";
+      document.getElementById("total-diferenca").textContent = algum ? brl(totalD) : "—";
+    }
+    document.querySelectorAll(".campo-contado").forEach(function (i) { i.addEventListener("input", atualizar); });
+    atualizar();
+  })();
+</script>
+{% endblock %}

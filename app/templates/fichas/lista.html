@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_fin, selo_sit, limpar_filtros with context %}
+{% block titulo %}Fichas{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Fichas de aluguel", "Controle") %}
+  {% endcall %}
+
+  <form class="filtros" method="get">
+    <div class="campo campo-busca">
+      <label for="q">Buscar</label>
+      <input type="search" id="q" name="q" value="{{ q }}" placeholder="Nome do cliente, CPF ou nº da ficha">
+    </div>
+    <div class="campo">
+      <label for="situacao">Situação</label>
+      <select id="situacao" name="situacao">
+        <option value="">Todas</option>
+        {% for k, v in SITUACOES.items() %}<option value="{{ k }}" {{ 'selected' if k == situacao }}>{{ v }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="status">Pagamento</label>
+      <select id="status" name="status">
+        <option value="">Todos</option>
+        {% for k, v in STATUS_FIN.items() %}<option value="{{ k }}" {{ 'selected' if k == status }}>{{ v }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn" type="submit">Filtrar</button>
+    {{ limpar_filtros('fichas.lista') }}
+  </form>
+
+  <div class="cartao cartao-sem-borda tabela-rolavel">
+    {% if fichas %}
+      <table class="tabela">
+        <thead>
+          <tr><th>Ficha</th><th>Cliente</th><th>Saída</th><th>Devolução</th><th>Situação</th>
+              <th class="direita">Valor</th><th class="direita">Restante</th><th>Pagamento</th></tr>
+        </thead>
+        <tbody>
+          {% for f in fichas %}
+            <tr class="{{ 'cancelada' if f.situacao == 'cancelada' }}">
+              <td><a class="principal" href="{{ url_for('fichas.ver', ficha_id=f.id) }}">nº {{ f.id }}</a></td>
+              <td><span class="principal">{{ f.cliente_nome }}</span><div class="suave pequeno num">{{ f.cliente_cpf | cpf }}</div></td>
+              <td class="num">{{ f.data_saida | data }}</td>
+              <td class="num">{{ f.data_devolucao | data }}</td>
+              <td>{{ selo_sit(f.situacao) }}</td>
+              <td class="direita num">{{ f.total | brl }}</td>
+              <td class="direita num">{{ (0 if f.status_financeiro == 'quitada' or f.situacao == 'cancelada' else f.restante) | brl }}</td>
+              <td>{{ selo_fin(f.status_financeiro) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="vazio">
+        <h3>Nenhuma ficha encontrada</h3>
+        <p>{{ 'Tente outros filtros.' if q or situacao or status else 'Crie a primeira ficha de aluguel.' }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{# Menu lateral. Cada item: (endpoint do link, rótulo, ícone, prefixos/endpoints que o deixam ativo). #}
+{% set ICONES = {
+  'inicio': '<path d="M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-3.5v-4.5h-5V17H4a1 1 0 0 1-1-1z"/>',
+  'fichas': '<rect x="4" y="2.5" width="12" height="15" rx="1.5"/><path d="M7 7h6M7 10h6M7 13h3.5"/>',
+  'clientes': '<circle cx="10" cy="7" r="3.2"/><path d="M3.8 17c.8-3.2 3.3-5 6.2-5s5.4 1.8 6.2 5"/>',
+  'aluguel': '<path d="M10 3.5a1.8 1.8 0 1 1 1.8 1.8c-.8 0-1.8.5-1.8 1.4v.8m0 0-7 5.6a1 1 0 0 0 .6 1.8h12.8a1 1 0 0 0 .6-1.8z"/>',
+  'saidas': '<path d="M11 4h4.5a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H11M3.5 10h9M9.5 6.5 13 10l-3.5 3.5"/>',
+  'devolucoes': '<path d="M9 4H4.5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1H9M16.5 10h-9M10.5 6.5 7 10l3.5 3.5"/>',
+  'disponibilidade': '<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 2.5v4M13 2.5v4M7.3 12.6l1.8 1.8 3.6-3.6"/>',
+  'lavagem': '<path d="M10 3c2.6 3.2 4.5 5.8 4.5 8.2a4.5 4.5 0 0 1-9 0C5.5 8.8 7.4 6.2 10 3z"/><path d="M8 12.2a2 2 0 0 0 2 2"/>',
+  'nova_venda': '<circle cx="10" cy="10" r="7"/><path d="M10 6.5v7M6.5 10h7"/>',
+  'vendas': '<path d="M4 6h12l-1 10.5a1 1 0 0 1-1 .9H6a1 1 0 0 1-1-.9zM7.5 8V5.5a2.5 2.5 0 0 1 5 0V8"/>',
+  'produtos_venda': '<path d="M8.5 3h3v3.2l2.3 2a2 2 0 0 1 .7 1.5V16a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V9.7a2 2 0 0 1 .7-1.5l2.3-2z"/><path d="M5.5 11.5h9"/>',
+  'financeiro': '<path d="M3.5 16.5h13M5.5 13.5V10M9 13.5V6.5M12.5 13.5V8.5M16 13.5V4.5"/>',
+  'fechar_caixa': '<rect x="3" y="6" width="14" height="10.5" rx="1.5"/><path d="M3 9.5h14M7 6V4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V6M10 12v1.5"/>',
+  'calendario': '<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 8.5h14M7 2.5v4M13 2.5v4M6.5 11.5h1M9.5 11.5h1M12.5 11.5h1M6.5 14h1M9.5 14h1"/>',
+  'relatorios': '<path d="M4 3.5v13h12.5"/><path d="M7 13l3-3.5 2.5 2 3.5-5"/>',
+  'configuracoes': '<circle cx="10" cy="10" r="2.6"/><path d="M10 2.8v2M10 15.2v2M2.8 10h2M15.2 10h2M4.9 4.9l1.4 1.4M13.7 13.7l1.4 1.4M4.9 15.1l1.4-1.4M13.7 6.3l1.4-1.4"/>',
+} %}
+{% set SECOES = [
+  ('Aluguel', [
+    ('agenda.inicio', 'Início', 'inicio', ['agenda.inicio']),
+    ('fichas.lista', 'Fichas', 'fichas', ['fichas.']),
+    ('clientes.lista', 'Clientes', 'clientes', ['clientes.']),
+    ('produtos.lista', 'Produtos de aluguel', 'aluguel', ['produtos.lista', 'produtos.novo', 'produtos.editar']),
+    ('agenda.saidas', 'Saídas do dia', 'saidas', ['agenda.saidas']),
+    ('agenda.devolucoes', 'Devoluções do dia', 'devolucoes', ['agenda.devolucoes']),
+    ('agenda.calendario', 'Calendário', 'calendario', ['agenda.calendario']),
+    ('produtos.disponibilidade', 'Disponibilidade', 'disponibilidade', ['produtos.disponibilidade']),
+    ('produtos.lavagem', 'Peças em lavagem', 'lavagem', ['produtos.lavagem']),
+  ]),
+  ('Vendas', [
+    ('vendas.nova', 'Nova venda', 'nova_venda', ['vendas.nova']),
+    ('vendas.lista', 'Vendas', 'vendas', ['vendas.lista', 'vendas.ver', 'vendas.editar']),
+    ('vendas.produtos', 'Produtos à venda', 'produtos_venda', ['vendas.produtos', 'vendas.novo_produto', 'vendas.editar_produto']),
+  ]),
+  ('Financeiro', [
+    ('financeiro.lista', 'Financeiro', 'financeiro', ['financeiro.lista', 'financeiro.novo_lancamento', 'financeiro.editar_lancamento']),
+    ('financeiro.fechamento', 'Fechar caixa', 'fechar_caixa', ['financeiro.fechamento']),
+    ('relatorios.pagina', 'Relatórios', 'relatorios', ['relatorios.']),
+  ]),
+  ('', [
+    ('configuracoes.pagina', 'Configurações', 'configuracoes', ['configuracoes.']),
+  ]),
+] %}
+<aside class="menu-lateral" aria-label="Menu principal">
+  <div class="menu-topo">
+    <a class="menu-marca" href="{{ url_for('agenda.inicio') }}" title="{{ NOME_LOJA }}">
+      <span class="menu-monograma" aria-hidden="true">F</span>
+      <span class="menu-nome">
+        <span class="menu-nome-loja">{{ NOME_LOJA }}</span>
+        <span class="menu-sub">Noivas &amp; padrinhos</span>
+      </span>
+    </a>
+  </div>
+  <nav class="menu-navegacao">
+    {% for titulo, itens in SECOES %}
+      <div class="menu-secao">
+        {% if titulo %}<div class="menu-titulo">{{ titulo }}</div>{% else %}<div class="menu-divisor"></div>{% endif %}
+        {% for destino, rotulo, icone, ativos in itens %}
+          {% set ligado = namespace(v=false) %}
+          {% for a in ativos %}{% if ep == a or (a.endswith('.') and ep.startswith(a)) %}{% set ligado.v = true %}{% endif %}{% endfor %}
+          <a class="menu-item {{ 'ativo' if ligado.v }}" href="{{ url_for(destino) }}" title="{{ rotulo }}" {{ 'aria-current=page' if ligado.v }}>
+            <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ ICONES[icone] | safe }}</svg>
+            <span class="menu-rotulo">{{ rotulo }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </nav>
+  <button class="menu-recolher" type="button" id="menu-recolher" aria-label="Recolher menu" title="Recolher menu">
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 5 6.5 10l5 5M15 5v10"/></svg>
+    <span class="menu-rotulo">Recolher menu</span>
+  </button>
+</aside>

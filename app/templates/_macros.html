@@ -1,0 +1,40 @@
+{% macro cabecalho(titulo, sobretitulo='') %}
+  <div class="cabecalho-pagina">
+    <div>
+      {% if sobretitulo %}<div class="sobretitulo">{{ sobretitulo }}</div>{% endif %}
+      <h1>{{ titulo }}</h1>
+      <div class="ornamento"><span></span></div>
+    </div>
+    <div class="acoes">{{ caller() if caller }}</div>
+  </div>
+{% endmacro %}
+
+{% macro selo_fin(status) %}<span class="selo selo-{{ status }}">{{ STATUS_FIN[status] }}</span>{% endmacro %}
+
+{% macro selo_peca(situacao) %}<span class="selo selo-peca-{{ situacao }}">{{ SITUACOES_PECA[situacao] }}</span>{% endmacro %}
+
+{% macro selo_sit(situacao) %}<span class="selo selo-{{ situacao }}">{{ SITUACOES[situacao] }}</span>{% endmacro %}
+
+{# Botão "Limpar filtros": fica sempre no mesmo lugar; apagado quando não há filtro aplicado. #}
+{% macro limpar_filtros(endpoint) %}
+  {% set filtros_ativos = request.args.items() | rejectattr(0, 'equalto', 'modo') | selectattr(1) | list %}
+  {% set manter = {'modo': request.args.get('modo')} if request.args.get('modo') else {} %}
+  {% if filtros_ativos %}
+    <a class="btn btn-texto btn-limpar" href="{{ url_for(endpoint, **manter) }}">
+      <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Limpar filtros
+    </a>
+  {% else %}
+    <span class="btn btn-texto btn-limpar" aria-disabled="true" title="Nenhum filtro aplicado">
+      <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Limpar filtros
+    </span>
+  {% endif %}
+{% endmacro %}
+
+{# Atributos que a janela de "Devolvida" usa para mostrar a multa por atraso e a devolução da caução. #}
+{% macro attrs_devolucao(f) -%}
+  {%- set dias, multa = previa_multa(f) -%}
+  data-atraso-dias="{{ dias }}" data-multa="{{ multa | campo_valor }}" data-multa-texto="{{ texto_multa(f.total) }}"
+  data-caucao="{{ (f.caucao_em_aberto | campo_valor) if f.caucao_em_aberto else '' }}"
+{%- endmacro %}

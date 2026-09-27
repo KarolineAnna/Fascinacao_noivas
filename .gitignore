@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+dados/
+*.db
+
+dist/
+build/
+PENDRIVE/
+*.exe
+
+venv/
+.venv/
+.env

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% set titulo = 'Editar peça' if produto else 'Nova peça' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho(titulo, "Produtos") %}
+  {% endcall %}
+
+  <form method="post" class="cartao" style="max-width: 760px" data-rastrear data-alterado="{{ '1' if request.method == 'POST' else '0' }}">
+    <div class="campos">
+      <div class="campo c-4">
+        <span class="rotulo">Código</span>
+        {% if produto %}
+          <div class="codigo-automatico">{{ produto.codigo }}</div>
+          <div class="ajuda">O código não muda depois do cadastro.</div>
+        {% else %}
+          <div class="codigo-automatico codigo-previsto">{{ proximo }}</div>
+          <div class="ajuda">Gerado automaticamente ao salvar.</div>
+        {% endif %}
+      </div>
+      <div class="campo c-8">
+        <label for="nome">Nome / descrição <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" name="nome" value="{{ dados.nome or '' }}" required autofocus
+               placeholder="Ex.: Vestido sereia em renda francesa">
+      </div>
+      <div class="campo c-4">
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo">
+          <option value="">—</option>
+          {% for t in tipos %}<option {{ 'selected' if t == dados.tipo }}>{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="campo c-4">
+        <label for="tamanho">Tamanho</label>
+        <input type="text" id="tamanho" name="tamanho" value="{{ dados.tamanho or '' }}" placeholder="Ex.: 40, M, 52">
+      </div>
+      <div class="campo c-4">
+        <label for="cor">Cor</label>
+        <input type="text" id="cor" name="cor" value="{{ dados.cor or '' }}" placeholder="Ex.: Off-white">
+      </div>
+      <div class="campo c-4">
+        <label for="valor_aluguel">Valor do aluguel (R$) <span class="obrigatorio">*</span></label>
+        <input type="text" id="valor_aluguel" name="valor_aluguel" inputmode="decimal" required
+               value="{{ dados.valor_texto or '' }}"
+               placeholder="0,00">
+      </div>
+    </div>
+    <div class="acoes" style="margin-top: 28px">
+      <button class="btn btn-primario" type="submit">Salvar peça</button>
+      <a class="btn btn-texto" href="{{ url_for('produtos.lista') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Venda nº {{ venda.id }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Venda nº " ~ venda.id, "Vendas") %}
+    <a class="btn btn-primario" href="{{ url_for('vendas.editar', venda_id=venda.id) }}">Editar</a>
+  {% endcall %}
+
+  <div class="grade-2">
+    <section class="cartao cartao-sem-borda">
+      <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0"><h2>Produtos</h2></div>
+      <table class="tabela">
+        <thead><tr><th>Produto</th><th>Marca / categoria</th><th class="direita">Preço</th><th class="centro">Qtd.</th><th class="direita">Subtotal</th></tr></thead>
+        <tbody>
+          {% for i in itens %}
+            <tr>
+              <td class="principal">{{ i.nome }}</td>
+              <td>{{ i.categoria }}</td>
+              <td class="direita num">{{ i.preco_unitario | brl }}</td>
+              <td class="centro num">{{ i.quantidade }}</td>
+              <td class="direita num">{{ i.subtotal | brl }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="4">Total</td><td class="direita num">{{ venda.total | brl }}</td></tr></tfoot>
+      </table>
+    </section>
+
+    <aside class="lateral">
+      <div class="cartao resumo">
+        <div class="cartao-titulo"><h2>Pagamento</h2></div>
+        <div class="linha"><span>Data</span><span class="num">{{ venda.data | data }}</span></div>
+        <div class="linha"><span>Forma</span><span>{{ venda.forma }}</span></div>
+        <div class="linha"><span>Cliente</span><span>
+          {% if venda.cliente_id %}<a href="{{ url_for('clientes.ver', cliente_id=venda.cliente_id) }}">{{ venda.cliente }}</a>
+          {% else %}{{ venda.cliente or '—' }}{% endif %}</span></div>
+        <div class="linha destaque"><span>Total</span><span class="num">{{ venda.total | brl }}</span></div>
+        {% if venda.observacao %}<p class="suave" style="white-space: pre-line">{{ venda.observacao }}</p>{% endif %}
+        <p class="suave pequeno" style="margin-bottom: 0">Esta venda aparece no Financeiro como entrada e entra no fechamento de caixa.</p>
+      </div>
+      <form method="post" action="{{ url_for('vendas.excluir', venda_id=venda.id) }}" style="margin-top: 16px; text-align: center"
+            data-confirmar="Você gostaria de excluir esta venda?"
+            data-nota="O valor de {{ venda.total | brl }} também sai do financeiro e do fechamento de caixa.">
+        <button class="btn btn-sm btn-texto btn-perigo" type="submit">Excluir venda</button>
+      </form>
+    </aside>
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

@@ -1,0 +1,42 @@
+{# Devoluções vencidas que ainda não foram marcadas como devolvidas (tela Início). #}
+{% from "_macros.html" import selo_sit, attrs_devolucao with context %}
+  {% if atrasadas %}
+    <section class="atrasos tabela-rolavel">
+      <div class="cartao-titulo">
+        <h2>Devoluções atrasadas</h2>
+        <span class="suave pequeno">{{ atrasadas | length }} ficha{{ 's' if atrasadas | length != 1 }} com devolução vencida</span>
+      </div>
+      <table class="tabela">
+        <thead><tr><th>Cliente</th><th>Telefone</th><th>Peças</th><th>Devolução</th><th>Situação</th><th></th></tr></thead>
+        <tbody>
+          {% for f in atrasadas %}
+            <tr>
+              <td>
+                <a class="principal" href="{{ url_for('fichas.ver', ficha_id=f.id) }}">{{ f.cliente_nome }}</a>
+                <div class="suave pequeno">Ficha nº {{ f.id }}</div>
+              </td>
+              <td class="num"><strong>{{ f.cliente_telefone or '—' }}</strong></td>
+              <td>
+                <ul class="lista-pecas">
+                  {% for p in pecas[f.id] %}<li><span class="codigo">{{ p.codigo }}</span>{{ p.nome }}</li>{% endfor %}
+                </ul>
+              </td>
+              <td class="num">
+                {{ f.data_devolucao | data }}
+                <div style="margin-top: 4px"><span class="selo selo-atraso">{{ dias_atraso[f.id] }} dia{{ 's' if dias_atraso[f.id] != 1 }} de atraso</span></div>
+                {% set _d, _m = previa_multa(f) %}
+                <div class="suave pequeno" style="margin-top: 4px">multa até hoje: <strong class="valor-saida">{{ _m | brl }}</strong></div>
+              </td>
+              <td>{{ selo_sit(f.situacao) }}</td>
+              <td>
+                <span data-ficha-url="{{ url_for('fichas.controle', ficha_id=f.id) }}" data-voltar="{{ request.full_path }}" {{ attrs_devolucao(f) }}>
+                  <button class="btn btn-sm" type="button" data-controle="devolvida" data-ligar="1">Marcar devolvida</button>
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  {% endif %}
+

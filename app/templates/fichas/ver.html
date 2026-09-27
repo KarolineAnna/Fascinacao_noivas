@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho, selo_fin, selo_sit, attrs_devolucao with context %}
+{% block titulo %}Ficha nº {{ ficha.id }}{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Ficha nº " ~ ficha.id, "Ficha de aluguel") %}
+    <a class="btn" href="{{ url_for('fichas.imprimir', ficha_id=ficha.id) }}" target="_blank">Imprimir ficha</a>
+    <a class="btn btn-primario" href="{{ url_for('fichas.editar', ficha_id=ficha.id) }}">Editar</a>
+  {% endcall %}
+
+  {% set cancelada = ficha.situacao == 'cancelada' %}
+  {% if cancelada %}
+    <div class="avisos"><div class="aviso aviso-erro">
+      Esta ficha está <strong>cancelada</strong>: as peças estão livres para outros aluguéis e os valores já
+      recebidos continuam no financeiro.
+      <form class="inline" method="post" action="{{ url_for('fichas.mudar_situacao', ficha_id=ficha.id) }}"
+            data-confirmar="Você gostaria de reativar esta ficha?" data-nota="Ela voltará para “Reservada”.">
+        <input type="hidden" name="situacao" value="reservada">
+        <button class="btn btn-sm" type="submit" style="margin-left: 8px">Reativar ficha</button>
+      </form>
+    </div></div>
+  {% endif %}
+
+  <div class="grade-2">
+    <div>
+      <section class="cartao">
+        <div class="cartao-titulo"><h2>Controles</h2>{{ selo_sit(ficha.situacao) }}</div>
+        {% set devolvida = ficha.situacao == 'devolvida' %}
+        {% set retirada = ficha.situacao in ('retirada', 'devolvida') %}
+        <div class="controles" data-ficha-url="{{ url_for('fichas.controle', ficha_id=ficha.id) }}"
+             data-total="{{ ficha.total | brl }}" data-restante="{{ ficha.restante | brl }}"
+             data-restante-pago="{{ '1' if ficha.status_financeiro == 'quitada' else '0' }}"
+             {{ attrs_devolucao(ficha) }} data-multa-valor="{{ ficha.multa_valor | campo_valor }}">
+          <div class="controle {{ 'bloqueado' if cancelada }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="entrada" {{ 'checked' if ficha.entrada_paga }} {{ 'disabled' if cancelada }}>
+              <span class="trilho"></span><span class="texto">Entrada paga</span>
+            </label>
+            <div class="detalhe-controle">
+              {% if ficha.entrada_paga %}{{ ficha.valor_entrada | brl }} em {{ ficha.data_entrada | data }}{% if ficha.forma_entrada %} · {{ ficha.forma_entrada }}{% endif %}{% endif %}
+            </div>
+          </div>
+          <div class="controle {{ 'bloqueado' if cancelada or devolvida }}">
+            <label class="interruptor" {% if devolvida %}title="Desmarque “Devolvida” para alterar a retirada"{% endif %}>
+              <input type="checkbox" data-controle="retirada" {{ 'checked' if retirada }} {{ 'disabled' if cancelada or devolvida }}>
+              <span class="trilho"></span><span class="texto">Retirada</span>
+            </label>
+            <div class="detalhe-controle">saída em {{ ficha.data_saida | data }}</div>
+          </div>
+          <div class="controle {{ 'bloqueado' if cancelada }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="restante" {{ 'checked' if ficha.restante_pago }} {{ 'disabled' if cancelada }}>
+              <span class="trilho"></span><span class="texto">Restante pago</span>
+            </label>
+            <div class="detalhe-controle">
+              {% if ficha.restante_pago %}{{ ficha.restante | brl }} em {{ ficha.data_restante | data }}{% if ficha.forma_restante %} · {{ ficha.forma_restante }}{% endif %}
+              {% else %}{{ ficha.restante | brl }} a receber{% endif %}
+            </div>
+          </div>
+          <div class="controle {{ 'bloqueado' if cancelada }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="devolvida" {{ 'checked' if devolvida }} {{ 'disabled' if cancelada }}>
+              <span class="trilho"></span><span class="texto">Devolvida</span>
+            </label>
+            <div class="detalhe-controle">devolução em {{ ficha.data_devolucao | data }}</div>
+          </div>
+        </div>
+      </section>
+
+      {% set dias_prev, multa_prev = previa_multa(ficha) %}
+      <section class="cartao">
+        <div class="cartao-titulo">
+          <h2>Caução e multa</h2>
+          <span class="suave pequeno">multa por atraso: {{ texto_multa(ficha.total) }} por dia</span>
+        </div>
+        <div class="controles" data-ficha-url="{{ url_for('fichas.controle', ficha_id=ficha.id) }}"
+             data-caucao="{{ ficha.caucao_valor | campo_valor }}" data-multa-valor="{{ ficha.multa_valor | campo_valor }}">
+          <div class="controle {{ 'bloqueado' if cancelada or ficha.caucao_devolvida }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="caucao" {{ 'checked' if ficha.caucao_valor }} {{ 'disabled' if cancelada or ficha.caucao_devolvida }}>
+              <span class="trilho"></span><span class="texto">Caução recebida</span>
+            </label>
+            <div class="detalhe-controle">
+              {% if ficha.caucao_valor %}{{ ficha.caucao_valor | brl }} em {{ ficha.caucao_data | data }}{% if ficha.caucao_forma %} · {{ ficha.caucao_forma }}{% endif %}
+              {% else %}sem caução{% endif %}
+            </div>
+          </div>
+          <div class="controle {{ 'bloqueado' if cancelada or not ficha.caucao_valor }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="caucao_devolvida" {{ 'checked' if ficha.caucao_devolvida }} {{ 'disabled' if cancelada or not ficha.caucao_valor }}>
+              <span class="trilho"></span><span class="texto">Caução devolvida</span>
+            </label>
+            <div class="detalhe-controle">
+              {% if ficha.caucao_devolvida %}{{ ficha.caucao_devolvido_valor | brl }} em {{ ficha.caucao_devolucao_data | data }}
+                {% if ficha.caucao_valor > ficha.caucao_devolvido_valor %}<br><span class="valor-saida">retidos {{ (ficha.caucao_valor - ficha.caucao_devolvido_valor) | brl }}</span>{% endif %}
+              {% elif ficha.caucao_valor %}{{ ficha.caucao_valor | brl }} a devolver{% endif %}
+            </div>
+          </div>
+          <div class="controle {{ 'bloqueado' if cancelada or not ficha.multa_valor }}">
+            <label class="interruptor">
+              <input type="checkbox" data-controle="multa" {{ 'checked' if ficha.multa_paga }} {{ 'disabled' if cancelada or not ficha.multa_valor }}>
+              <span class="trilho"></span><span class="texto">Multa paga</span>
+            </label>
+            <div class="detalhe-controle">
+              {% if ficha.multa_paga %}{{ ficha.multa_valor | brl }} em {{ ficha.multa_data | data }}{% if ficha.multa_forma %} · {{ ficha.multa_forma }}{% endif %}
+              {% elif ficha.multa_valor %}<span class="valor-saida">{{ ficha.multa_valor | brl }} a receber</span>
+                · <button type="button" class="link-botao" data-controle="isentar_multa" data-ligar="1">isentar</button>
+              {% elif ficha.situacao == 'devolvida' %}sem atraso
+              {% elif dias_prev %}<span class="valor-saida">atrasada {{ dias_prev }} dia{{ 's' if dias_prev != 1 }}: {{ multa_prev | brl }} até hoje</span>
+              {% else %}calculada se a devolução atrasar{% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cartao">
+        <div class="cartao-titulo">
+          <h2>Cliente</h2>
+          <a class="pequeno" href="{{ url_for('clientes.ver', cliente_id=ficha.cliente_id) }}">Ver cadastro e histórico →</a>
+        </div>
+        <div class="dados">
+          <div><div class="rotulo">Nome</div><div class="valor">{{ ficha.cliente_nome }}</div></div>
+          <div><div class="rotulo">CPF</div><div class="valor num">{{ ficha.cliente_cpf | cpf }}</div></div>
+          <div><div class="rotulo">Telefone</div><div class="valor num">{{ ficha.cliente_telefone or '—' }}</div></div>
+          <div><div class="rotulo">Endereço</div><div class="valor">{{ ficha.cliente_endereco or '—' }}</div></div>
+        </div>
+      </section>
+
+      <section class="cartao cartao-sem-borda">
+        <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0"><h2>Peças alugadas</h2></div>
+        <table class="tabela">
+          <thead><tr><th>Código</th><th>Peça</th><th>Tamanho</th><th>Cor</th><th class="direita">Valor</th></tr></thead>
+          <tbody>
+            {% for i in itens %}
+              <tr>
+                <td><span class="codigo">{{ i.codigo }}</span></td>
+                <td class="principal">{{ i.nome }}</td>
+                <td>{{ i.tamanho or '—' }}</td>
+                <td>{{ i.cor or '—' }}</td>
+                <td class="direita num">{{ i.valor_cobrado | brl }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot><tr><td colspan="4">Valor do aluguel</td><td class="direita num">{{ ficha.total | brl }}</td></tr></tfoot>
+        </table>
+      </section>
+
+      <section class="cartao">
+        <div class="cartao-titulo"><h2>Datas</h2></div>
+        <div class="dados">
+          <div><div class="rotulo">Saída</div><div class="valor num">{{ ficha.data_saida | data }}</div></div>
+          <div><div class="rotulo">Devolução</div><div class="valor num">{{ ficha.data_devolucao | data }}</div></div>
+          <div><div class="rotulo">Criada em</div><div class="valor num">{{ ficha.criado_em[:10] | data }}</div></div>
+        </div>
+        {% if ficha.observacoes %}
+          <div style="margin-top: 22px"><div class="rotulo">Observações</div><div style="white-space: pre-line">{{ ficha.observacoes }}</div></div>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="lateral">
+      <div class="cartao resumo">
+        <div class="cartao-titulo"><h2>Pagamento</h2></div>
+        <div class="linha"><span>Valor do aluguel</span><span class="num">{{ ficha.total | brl }}</span></div>
+        <div class="linha">
+          <span>Entrada{% if ficha.entrada_paga %}<br><small class="suave">paga em {{ ficha.data_entrada | data }}{% if ficha.forma_entrada %} · {{ ficha.forma_entrada }}{% endif %}</small>{% endif %}</span>
+          <span class="num">{{ ficha.entrada_efetiva | brl }}</span>
+        </div>
+        <div class="linha destaque">
+          <span>Restante{% if ficha.restante_pago %}<br><small class="suave">pago em {{ ficha.data_restante | data }}{% if ficha.forma_restante %} · {{ ficha.forma_restante }}{% endif %}</small>{% endif %}</span>
+          <span class="num">{{ ficha.restante | brl }}</span>
+        </div>
+        <div class="status">{{ selo_fin(ficha.status_financeiro) }}</div>
+        {% if ficha.multa_valor %}
+          <div class="linha"><span>Multa por atraso{% if ficha.multa_paga %}<br><small class="suave">paga em {{ ficha.multa_data | data }}</small>{% endif %}</span>
+            <span class="num {{ 'valor-saida' if not ficha.multa_paga }}">{{ ficha.multa_valor | brl }}</span></div>
+        {% endif %}
+        {% if ficha.caucao_valor %}
+          <div class="linha"><span>Caução{% if ficha.caucao_devolvida %}<br><small class="suave">devolvida {{ ficha.caucao_devolvido_valor | brl }}</small>{% endif %}</span>
+            <span class="num">{{ ficha.caucao_valor | brl }}</span></div>
+        {% endif %}
+      </div>
+
+      {% if not cancelada %}
+        <form method="post" action="{{ url_for('fichas.mudar_situacao', ficha_id=ficha.id) }}" style="margin-top: 16px; text-align: center"
+              data-confirmar="Você gostaria de cancelar esta ficha?"
+              data-nota="As peças ficam livres para outros aluguéis nesse período. Os valores já recebidos continuam no financeiro.">
+          <input type="hidden" name="situacao" value="cancelada">
+          <button class="btn btn-sm btn-texto btn-perigo" type="submit">Cancelar ficha</button>
+        </form>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% from "_macros.html" import cabecalho with context %}
+{% block titulo %}Configurações{% endblock %}
+{% block conteudo %}
+  {% call cabecalho("Configurações", "Sistema") %}{% endcall %}
+
+  <section class="cartao">
+    <div class="cartao-titulo">
+      <h2>Backup automático</h2>
+      <span class="suave pequeno">uma cópia a cada abertura · últimas {{ manter }} mantidas</span>
+    </div>
+
+    {% if erro_backup %}<div class="aviso aviso-erro" style="margin-bottom: 20px">{{ erro_backup }}</div>{% endif %}
+
+    <div class="rotulo">Pasta atual</div>
+    <p style="margin: 0 0 20px; font-weight: 400; word-break: break-all">
+      {{ pasta }} {% if not personalizada %}<span class="selo selo-reservada">padrão</span>{% endif %}
+    </p>
+
+    <form method="post" action="{{ url_for('configuracoes.salvar_pasta') }}" class="filtros" style="margin-bottom: 12px">
+      <div class="campo campo-busca">
+        <label for="pasta">Nova pasta de backups</label>
+        <input type="text" id="pasta" name="pasta" placeholder="Ex.: G:\Meu Drive\Backups Fascinação  ou  E:\Backups">
+      </div>
+      <button class="btn btn-primario" type="submit">Usar esta pasta</button>
+    </form>
+    <div class="acoes">
+      <form class="inline" method="post" action="{{ url_for('configuracoes.escolher_pasta') }}">
+        <button class="btn" type="submit">Escolher pasta…</button>
+      </form>
+      {% if personalizada %}
+        <form class="inline" method="post" action="{{ url_for('configuracoes.salvar_pasta') }}">
+          <input type="hidden" name="acao" value="padrao">
+          <button class="btn btn-texto" type="submit">Voltar à pasta padrão</button>
+        </form>
+      {% endif %}
+      <form class="inline" method="post" action="{{ url_for('configuracoes.backup_agora') }}">
+        <button class="btn btn-texto" type="submit">Fazer backup agora</button>
+      </form>
+    </div>
+    <p class="suave pequeno" style="margin: 16px 0 0">
+      Dica: escolha uma pasta do Google Drive para computador (ex.: <em>G:\Meu Drive</em>) ou de um pendrive,
+      para ter uma cópia fora deste computador. Se a pasta não estiver disponível ao abrir o sistema,
+      a cópia é salva na pasta padrão: {{ pasta_padrao }}
+    </p>
+  </section>
+
+  <section class="cartao cartao-sem-borda tabela-rolavel">
+    <div class="cartao-titulo" style="padding: 24px 30px 14px; margin: 0">
+      <h2>Cópias existentes</h2><span class="suave pequeno">{{ copias | length }} arquivo{{ 's' if copias | length != 1 }}</span>
+    </div>
+    {% if copias %}
+      <table class="tabela">
+        <thead><tr><th>Arquivo</th><th>Criado em</th><th class="direita">Tamanho</th></tr></thead>
+        <tbody>
+          {% for c in copias[:10] %}
+            <tr><td class="principal">{{ c.nome }}</td><td class="num">{{ c.data.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td class="direita num">{{ c.tamanho_kb }} KB</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if copias | length > 10 %}<p class="suave pequeno" style="padding: 0 30px 18px">Mostrando as 10 mais recentes.</p>{% endif %}
+    {% else %}
+      <div class="vazio"><p>Nenhuma cópia nesta pasta ainda.</p></div>
+    {% endif %}
+  </section>
+
+  {% for grupo, lista in grupos.items() %}
+    <section class="cartao" id="categorias-{{ grupo }}">
+      <div class="cartao-titulo"><h2>{{ nomes_grupos[grupo] }}</h2></div>
+      <table class="tabela" style="margin-bottom: 20px">
+        <tbody>
+          {% for c in lista %}
+            <tr>
+              <td>
+                <form class="form-renomear" method="post" action="{{ url_for('configuracoes.renomear_categoria', categoria_id=c.id) }}">
+                  <input type="text" name="nome" value="{{ c.nome }}" aria-label="Nome da categoria">
+                  <button class="btn btn-sm btn-texto" type="submit">Salvar nome</button>
+                </form>
+              </td>
+              <td class="direita">
+                <form class="inline" method="post" action="{{ url_for('configuracoes.remover_categoria', categoria_id=c.id) }}"
+                      data-confirmar="Você gostaria de remover “{{ c.nome }}”?"
+                      data-nota="Só é possível remover categorias que não estão em uso.">
+                  <button class="btn btn-sm btn-texto btn-perigo" type="submit">Remover</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td class="suave">Nenhuma categoria cadastrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <form method="post" action="{{ url_for('configuracoes.adicionar_categoria') }}" class="filtros" style="margin: 0">
+        <input type="hidden" name="grupo" value="{{ grupo }}">
+        <div class="campo campo-busca">
+          <label for="nova-{{ grupo }}">Nova categoria</label>
+          <input type="text" id="nova-{{ grupo }}" name="nome" placeholder="{{ 'Ex.: Fotógrafo' if grupo == 'financeiro' else 'Ex.: O Boticário' }}">
+        </div>
+        <button class="btn btn-primario" type="submit">Adicionar</button>
+      </form>
+    </section>
+  {% endfor %}
+
+  <section class="cartao" id="formas">
+    <div class="cartao-titulo"><h2>Formas de pagamento</h2></div>
+    <table class="tabela" style="margin-bottom: 20px">
+      <tbody>
+        {% for f in formas %}
+          <tr>
+            <td class="principal">{{ f.nome }}</td>
+            <td class="direita">
+              <form class="inline" method="post" action="{{ url_for('configuracoes.remover_forma', forma_id=f.id) }}"
+                    data-confirmar="Você gostaria de remover “{{ f.nome }}”?"
+                    data-nota="As fichas que já usam essa forma de pagamento não são alteradas.">
+                <button class="btn btn-sm btn-texto btn-perigo" type="submit">Remover</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td class="suave">Nenhuma forma de pagamento cadastrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post" action="{{ url_for('configuracoes.adicionar_forma') }}" class="filtros" style="margin: 0">
+      <div class="campo campo-busca">
+        <label for="nome-forma">Nova forma de pagamento</label>
+        <input type="text" id="nome-forma" name="nome" placeholder="Ex.: Transferência bancária">
+      </div>
+      <button class="btn btn-primario" type="submit">Adicionar</button>
+    </form>
+  </section>
+
+  <section class="cartao" id="contrato">
+    <div class="cartao-titulo"><h2>Contrato e multa por atraso</h2></div>
+    <form method="post" action="{{ url_for('configuracoes.salvar_contrato') }}" data-rastrear data-alterado="0">
+      <div class="campos">
+        <div class="campo c-6">
+          <label for="multa_tipo">Como calcular a multa</label>
+          <select id="multa_tipo" name="multa_tipo">
+            {% for k, v in multa_tipos.items() %}<option value="{{ k }}" {{ 'selected' if k == multa_tipo }}>{{ v }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="campo c-6">
+          <label for="multa_valor">Multa por dia de atraso <span class="suave">({{ '%' if multa_tipo == 'percentual' else 'R$' }})</span></label>
+          <input type="text" id="multa_valor" name="multa_valor" inputmode="decimal" value="{{ multa_valor_campo }}">
+          <div class="ajuda">Ex.: 10 (= 10% do aluguel por dia) ou 50,00 (= R$ 50,00 por dia). Use 0 para não cobrar.</div>
+        </div>
+        <div class="campo c-12">
+          <label for="termo_texto">Termo de responsabilidade (sai na ficha impressa)</label>
+          <textarea id="termo_texto" name="termo_texto" rows="9" style="min-height: 220px">{{ termo_texto }}</textarea>
+          <div class="ajuda">Use {devolucao} para a data de devolução, {multa_dia} para a multa por dia, {caucao} para a caução e {cliente} para o nome do cliente.</div>
+        </div>
+      </div>
+      <div class="acoes" style="margin-top: 18px">
+        <button class="btn btn-primario" type="submit">Salvar contrato</button>
+        <button class="btn btn-texto" type="submit" name="acao" value="padrao">Restaurar texto padrão</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="cartao">
+    <div class="cartao-titulo"><h2>Sistema</h2></div>
+    <p class="suave" style="margin-top: 0">Banco de dados: <span style="word-break: break-all">{{ banco }}</span></p>
+    {% if pode_encerrar %}
+      <form method="post" action="{{ url_for('configuracoes.encerrar') }}"
+            data-confirmar="Você gostaria de encerrar o sistema?"
+            data-nota="O sistema deixa de funcionar até ser aberto de novo pelo atalho da área de trabalho. Nada é perdido.">
+        <button class="btn btn-perigo" type="submit">Encerrar o sistema</button>
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}
+{% block scripts %}{% include "_controles.html" %}{% endblock %}
