@@ -979,14 +979,6 @@ body.com-menu { padding-left: var(--menu-largura); transition: padding-left .2s 
 .menu-item:hover { background: var(--m-hover); color: var(--m-claro); text-decoration: none; }
 .menu-item.ativo, .menu-item.ativo:hover { background: var(--m-ativo-fundo); color: var(--m-ativo-texto); font-weight: 500; }
 .menu-item:focus-visible, .menu-recolher:focus-visible, .menu-marca:focus-visible { outline: 2px solid var(--m-titulo); outline-offset: 2px; }
-.menu-item.ativo::before {
-  content: "";
-  position: absolute;
-  left: -12px; top: 7px; bottom: 7px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--m-titulo);
-}
 
 .menu-recolher {
   display: flex;
