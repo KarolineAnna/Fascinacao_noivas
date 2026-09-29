@@ -50,7 +50,7 @@
                   <span class="selo selo-peca-disponivel">Disponível</span>
                   {% if l.lavagem %}<div class="aviso-peca pequeno">Em lavagem hoje: confira se ficará pronta.</div>{% endif %}
                   {% if l.fora_agora and l.fora_agora.atrasada %}
-                    <div class="aviso-peca pequeno" style="color: #9A5842">
+                    <div class="aviso-peca pequeno" style="color: var(--erro)">
                       Atenção: ainda não foi devolvida (<a href="{{ url_for('fichas.ver', ficha_id=l.fora_agora.ficha_id) }}">ficha nº {{ l.fora_agora.ficha_id }}</a>,
                       devolução prevista em {{ l.fora_agora.data_devolucao | data }}).
                     </div>

@@ -2,7 +2,7 @@
 
 @page { size: A4; margin: 14mm 16mm; }
 
-.pagina-impressao { background: #EFEAE3; }
+.pagina-impressao { background: var(--fundo-2); }
 
 .barra-impressao {
   display: flex;
@@ -17,7 +17,7 @@
   margin: 0 auto 40px;
   padding: 16mm 18mm;
   background: #fff;
-  box-shadow: 0 10px 40px rgba(46, 42, 39, .12);
+  box-shadow: 0 10px 40px rgba(59, 36, 38, .12);
   display: flex;
   flex-direction: column;
   font-size: 10.5pt;
@@ -25,9 +25,10 @@
   print-color-adjust: exact;
 }
 
-.folha-topo { text-align: center; padding-bottom: 6mm; border-bottom: 1px solid var(--dourado); }
+.folha-topo { text-align: center; padding-bottom: 6mm; border-bottom: 1px solid var(--destaque); }
+.folha-logo { display: block; width: 34mm; height: 34mm; margin: 0 auto 2mm; border-radius: 50%; }
 .folha-marca { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 30pt; line-height: 1; }
-.folha-sub { margin-top: 6px; font-size: 7pt; letter-spacing: .4em; text-transform: uppercase; color: var(--dourado); }
+.folha-sub { margin-top: 6px; font-size: 7pt; letter-spacing: .4em; text-transform: uppercase; color: var(--destaque); }
 .ornamento.centralizado { margin: 10px auto 0; }
 
 .folha-titulo {
@@ -44,7 +45,7 @@
   font-size: 6.8pt;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: var(--taupe);
+  color: var(--texto-2);
 }
 
 .folha-secao { margin-top: 6mm; }
@@ -52,8 +53,8 @@
   font-size: 14pt;
   padding-bottom: 2mm;
   margin-bottom: 3mm;
-  border-bottom: 1px solid var(--linha);
-  color: var(--dourado-escuro);
+  border-bottom: 1px solid var(--borda);
+  color: var(--destaque-hover);
 }
 
 .folha-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; }
@@ -65,25 +66,25 @@
   font-size: 6.8pt;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--taupe);
+  color: var(--texto-2);
   font-weight: 400;
   padding: 2mm 2mm 2mm 0;
-  border-bottom: 1px solid var(--linha);
+  border-bottom: 1px solid var(--borda);
 }
-.folha-tabela td { padding: 2.2mm 2mm 2.2mm 0; border-bottom: 1px solid var(--linha); }
-.folha-tabela td:first-child { color: var(--dourado-escuro); }
+.folha-tabela td { padding: 2.2mm 2mm 2.2mm 0; border-bottom: 1px solid var(--borda); }
+.folha-tabela td:first-child { color: var(--destaque-hover); }
 
 .folha-colunas { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10mm; }
 
-.folha-linha { display: flex; justify-content: space-between; gap: 6mm; padding: 1.8mm 0; border-bottom: 1px dashed var(--linha); }
+.folha-linha { display: flex; justify-content: space-between; gap: 6mm; padding: 1.8mm 0; border-bottom: 1px dashed var(--borda); }
 .folha-linha:last-child { border-bottom: none; }
-.folha-linha span { color: var(--taupe); }
+.folha-linha span { color: var(--texto-2); }
 .folha-linha small { font-size: 8pt; }
 .folha-linha strong { font-weight: 500; }
 .folha-linha.total strong { font-family: var(--serif); font-size: 15pt; }
 
 .folha-obs { margin: 0; white-space: pre-line; }
-.folha-termo p { margin: 0 0 1.6mm; font-size: 8.4pt; line-height: 1.45; text-align: justify; color: #3d3935; }
+.folha-termo p { margin: 0 0 1.6mm; font-size: 8.4pt; line-height: 1.45; text-align: justify; color: var(--texto); }
 
 .folha-assinatura {
   margin-top: auto;
@@ -93,8 +94,8 @@
   align-items: flex-end;
   gap: 12mm;
 }
-.assinatura { flex: 1; text-align: center; color: var(--taupe); font-size: 9pt; }
-.linha-assinatura { border-bottom: 1px solid var(--grafite); margin-bottom: 2mm; height: 10mm; }
+.assinatura { flex: 1; text-align: center; color: var(--texto-2); font-size: 9pt; }
+.linha-assinatura { border-bottom: 1px solid var(--texto); margin-bottom: 2mm; height: 10mm; }
 .data-assinatura { white-space: nowrap; font-size: 10pt; padding-bottom: 6mm; }
 
 @media print {

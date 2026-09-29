@@ -71,7 +71,7 @@
               <td class="num">{{ u.data | data }}</td>
               <td class="direita num">{{ u.esperado | brl }}</td>
               <td class="direita num">{{ u.contado | brl }}</td>
-              <td class="direita num {{ 'valor-saida' if dif < 0 else ('valor-entrada' if dif > 0) }}">{{ dif | brl }}</td>
+              <td class="direita num diferenca {{ 'com-diferenca' if dif else 'confere' }}">{{ (dif | brl) if dif else 'confere' }}</td>
               <td class="direita"><a class="btn btn-sm btn-texto" href="{{ url_for('financeiro.fechamento', data=u.data) }}">Abrir</a></td>
             </tr>
           {% endfor %}
@@ -105,7 +105,7 @@
         var d = c - parseInt(tr.dataset.esperado, 10);
         totalC += c; totalD += d;
         cel.textContent = d === 0 ? "confere" : brl(d);
-        cel.className = "direita num diferenca " + (d < 0 ? "valor-saida" : d > 0 ? "valor-entrada" : "confere");
+        cel.className = "direita num diferenca " + (d === 0 ? "confere" : "com-diferenca");   /* sobra ou falta = diferença */
       });
       document.getElementById("total-contado").textContent = algum ? brl(totalC) : "—";
       document.getElementById("total-diferenca").textContent = algum ? brl(totalD) : "—";

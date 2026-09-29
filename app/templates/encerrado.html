@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sistema encerrado · {{ NOME_LOJA }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/icone.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <header class="topo">
     <span class="marca">
+      <img class="marca-logo" src="{{ url_for('static', filename='img/logo-160.png') }}" alt="" width="72" height="72">
       <span class="marca-nome">{{ NOME_LOJA }}</span>
       <span class="marca-sub">Aluguel de trajes para noivas e padrinhos</span>
     </span>

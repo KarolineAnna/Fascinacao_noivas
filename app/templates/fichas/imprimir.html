@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ficha nº {{ ficha.id }} · {{ NOME_LOJA }}</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/icone.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/impressao.css') }}">
 </head>
@@ -19,7 +19,7 @@
 
   <article class="folha">
     <header class="folha-topo">
-      <div class="folha-marca">{{ NOME_LOJA }}</div>
+      <img class="folha-logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ NOME_LOJA }}">
       <div class="folha-sub">Aluguel de trajes para noivas e padrinhos</div>
       <div class="ornamento centralizado"><span></span></div>
     </header>
